@@ -78,6 +78,9 @@ struct LogsView: View {
                 if logTab == .fuel {
                     LogFuelFAB { showFuelLog = true }
                         .padding(.bottom, 8)
+                } else {
+                    LogCostFAB { showCostLog = true }
+                        .padding(.bottom, 8)
                 }
             }
             .sheet(isPresented: $showFuelLog) {
@@ -169,6 +172,29 @@ struct LogsView: View {
         .padding(40)
         .ccCardSurface(cornerRadius: 18)
         .padding(.top, 4)
+    }
+}
+
+struct LogCostFAB: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                Text("Log Cost")
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            .foregroundStyle(Color.ccTextPrimary)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 16)
+            .background(
+                Capsule()
+                    .fill(Color.ccTeal)
+                    .shadow(color: Color.ccTeal.opacity(0.45), radius: 16, x: 0, y: 6)
+            )
+        }
     }
 }
 
