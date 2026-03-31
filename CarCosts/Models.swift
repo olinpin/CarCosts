@@ -50,6 +50,7 @@ final class Car {
     var name: String
     var purchasePrice: Double
     var purchaseDate: Date
+    var initialOdometer: Double?
     var resalePromptScheduleRaw: String
     var lastResalePromptDate: Date?
 
@@ -58,10 +59,11 @@ final class Car {
     @Relationship(deleteRule: .cascade) var recurringCosts: [RecurringCost] = []
     @Relationship(deleteRule: .cascade) var otherCosts: [OtherCost] = []
 
-    init(name: String, purchasePrice: Double, purchaseDate: Date) {
+    init(name: String, purchasePrice: Double, purchaseDate: Date, initialOdometer: Double? = nil) {
         self.name = name
         self.purchasePrice = purchasePrice
         self.purchaseDate = purchaseDate
+        self.initialOdometer = initialOdometer
         self.resalePromptScheduleRaw = PromptSchedule.monthly.rawValue
     }
 
@@ -75,7 +77,7 @@ final class Car {
     }
 
     var latestOdometer: Double? {
-        fuelEntries.sorted { $0.date > $1.date }.first?.odometerReading
+        fuelEntries.sorted { $0.date > $1.date }.first?.odometerReading ?? initialOdometer
     }
 }
 

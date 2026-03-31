@@ -29,6 +29,10 @@ func formatEfficiency(_ value: Double) -> String {
     String(format: "%.1f L/100", value)
 }
 
+func formatOdometer(_ value: Double) -> String {
+    Int(value.rounded()).formatted()
+}
+
 // MARK: - Period
 
 enum Period: String, CaseIterable {

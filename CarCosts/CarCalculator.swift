@@ -7,12 +7,18 @@ struct CarCalculator {
         car.fuelEntries.sorted { $0.date < $1.date }
     }
 
+    private var odometerBaseline: Double? {
+        car.initialOdometer
+    }
+
     // MARK: - All-time
 
     var totalKmDriven: Double {
         let e = sortedFuelEntries
-        guard e.count >= 2 else { return 0 }
-        return max(0, e.last!.odometerReading - e.first!.odometerReading)
+        guard let last = e.last else { return 0 }
+        let start = odometerBaseline ?? e.first?.odometerReading
+        guard let start else { return 0 }
+        return max(0, last.odometerReading - start)
     }
 
     // MARK: - Period helpers
@@ -21,13 +27,20 @@ struct CarCalculator {
     // km and liters are attributed to the date of the later fill-up.
     private func tripData(from start: Date, to end: Date) -> (km: Double, liters: Double) {
         let entries = sortedFuelEntries
-        guard entries.count >= 2 else { return (0.0, 0.0) }
         var km = 0.0, liters = 0.0
-        for i in 1..<entries.count {
-            let e = entries[i]
-            guard e.date >= start && e.date <= end else { continue }
-            km += max(0, e.odometerReading - entries[i - 1].odometerReading)
-            liters += e.liters
+        for (index, entry) in entries.enumerated() {
+            guard entry.date >= start && entry.date <= end else { continue }
+
+            let previousOdometer: Double?
+            if index == 0 {
+                previousOdometer = odometerBaseline
+            } else {
+                previousOdometer = entries[index - 1].odometerReading
+            }
+
+            guard let previousOdometer else { continue }
+            km += max(0, entry.odometerReading - previousOdometer)
+            liters += entry.liters
         }
         return (km, liters)
     }
@@ -123,13 +136,19 @@ struct CarCalculator {
     // Per-trip efficiency for line chart
     var tripEfficiencies: [(date: Date, l100km: Double)] {
         let entries = sortedFuelEntries
-        guard entries.count >= 2 else { return [] }
         var result: [(Date, Double)] = []
-        for i in 1..<entries.count {
-            let e = entries[i]
-            let km = max(0, e.odometerReading - entries[i - 1].odometerReading)
+        for (index, entry) in entries.enumerated() {
+            let previousOdometer: Double?
+            if index == 0 {
+                previousOdometer = odometerBaseline
+            } else {
+                previousOdometer = entries[index - 1].odometerReading
+            }
+
+            guard let previousOdometer else { continue }
+            let km = max(0, entry.odometerReading - previousOdometer)
             guard km > 0 else { continue }
-            result.append((e.date, (e.liters / km) * 100))
+            result.append((entry.date, (entry.liters / km) * 100))
         }
         return result
     }

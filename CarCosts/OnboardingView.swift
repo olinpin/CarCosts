@@ -6,6 +6,7 @@ struct OnboardingView: View {
 
     @State private var carName = ""
     @State private var purchasePriceText = ""
+    @State private var initialOdometerText = ""
     @State private var purchaseDate = Date()
 
     private var canSave: Bool {
@@ -51,6 +52,13 @@ struct OnboardingView: View {
                             keyboardType: .decimalPad
                         )
 
+                        GlassInputField(
+                            title: "Initial odometer (km)",
+                            text: $initialOdometerText,
+                            placeholder: "e.g. 84200",
+                            keyboardType: .numberPad
+                        )
+
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Purchase date")
                                 .font(.caption)
@@ -89,7 +97,13 @@ struct OnboardingView: View {
     private func saveCar() {
         guard let price = Double(purchasePriceText.replacingOccurrences(of: ",", with: ".")),
               !carName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        let car = Car(name: carName.trimmingCharacters(in: .whitespaces), purchasePrice: price, purchaseDate: purchaseDate)
+        let initialOdometer = Double(initialOdometerText.replacingOccurrences(of: ",", with: "."))
+        let car = Car(
+            name: carName.trimmingCharacters(in: .whitespaces),
+            purchasePrice: price,
+            purchaseDate: purchaseDate,
+            initialOdometer: initialOdometer
+        )
         modelContext.insert(car)
     }
 }

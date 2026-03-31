@@ -446,6 +446,7 @@ struct RecentActivitySection: View {
 
 struct AddResaleValueSheet: View {
     let car: Car
+    var entryToEdit: ResaleValueEntry? = nil
     let onSave: () -> Void
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -457,6 +458,8 @@ struct AddResaleValueSheet: View {
         Double(valueText.replacingOccurrences(of: ",", with: ".")) != nil
     }
 
+    private var isEditing: Bool { entryToEdit != nil }
+
     var body: some View {
         ZStack {
             AppBackground()
@@ -466,10 +469,10 @@ struct AddResaleValueSheet: View {
                     Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
                         .font(.system(size: 48))
                         .foregroundStyle(.orange)
-                    Text("Current Resale Value")
+                    Text(isEditing ? "Edit Resale Value" : "Current Resale Value")
                         .font(.title2.bold())
                         .foregroundStyle(Color.ccTextPrimary)
-                    Text("What could you sell your car for today?")
+                    Text(isEditing ? "Update the recorded resale estimate" : "What could you sell your car for today?")
                         .font(.subheadline)
                         .foregroundStyle(Color.ccTextSecondary)
                         .multilineTextAlignment(.center)
@@ -495,9 +498,11 @@ struct AddResaleValueSheet: View {
                 .padding(.horizontal, 24)
 
                 HStack(spacing: 12) {
-                    Button("Skip") {
-                        car.lastResalePromptDate = Date()
-                        onSave()
+                    Button(isEditing ? "Cancel" : "Skip") {
+                        if !isEditing {
+                            car.lastResalePromptDate = Date()
+                            onSave()
+                        }
                         dismiss()
                     }
                     .frame(maxWidth: .infinity)
@@ -505,11 +510,16 @@ struct AddResaleValueSheet: View {
                     .ccCardSurface(cornerRadius: 14)
                     .foregroundStyle(Color.ccTextSecondary)
 
-                    Button("Save") {
+                    Button(isEditing ? "Update" : "Save") {
                         guard let value = Double(valueText.replacingOccurrences(of: ",", with: ".")) else { return }
-                        let entry = ResaleValueEntry(date: date, value: value)
-                        entry.car = car
-                        modelContext.insert(entry)
+                        if let entryToEdit {
+                            entryToEdit.value = value
+                            entryToEdit.date = date
+                        } else {
+                            let entry = ResaleValueEntry(date: date, value: value)
+                            entry.car = car
+                            modelContext.insert(entry)
+                        }
                         car.lastResalePromptDate = Date()
                         onSave()
                         dismiss()
@@ -527,5 +537,11 @@ struct AddResaleValueSheet: View {
             }
         }
         .presentationBackground(ccBaseColor)
+        .onAppear {
+            if let entryToEdit {
+                valueText = String(format: "%.2f", entryToEdit.value)
+                date = entryToEdit.date
+            }
+        }
     }
 }

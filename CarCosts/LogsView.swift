@@ -74,6 +74,12 @@ struct LogsView: View {
                 }
             }
             .navigationBarHidden(true)
+            .safeAreaInset(edge: .bottom) {
+                if logTab == .fuel {
+                    LogFuelFAB { showFuelLog = true }
+                        .padding(.bottom, 8)
+                }
+            }
             .sheet(isPresented: $showFuelLog) {
                 AddFuelView(car: car)
             }

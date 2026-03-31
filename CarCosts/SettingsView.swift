@@ -6,6 +6,8 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var showAddResale = false
+    @State private var resaleEntryToEdit: ResaleValueEntry?
+    @State private var showEditResale = false
     @State private var showAddRecurring = false
     @State private var showEditCar = false
 
@@ -45,6 +47,11 @@ struct SettingsView: View {
             .sheet(isPresented: $showAddResale) {
                 AddResaleValueSheet(car: car, onSave: {})
             }
+            .sheet(isPresented: $showEditResale) {
+                if let resaleEntryToEdit {
+                    AddResaleValueSheet(car: car, entryToEdit: resaleEntryToEdit, onSave: {})
+                }
+            }
             .sheet(isPresented: $showEditCar) {
                 EditCarSheet(car: car)
             }
@@ -71,7 +78,11 @@ struct SettingsView: View {
                 SettingsRow(label: "Purchase price", value: formatEUR(car.purchasePrice))
                 Divider().background(.white.opacity(0.08)).padding(.horizontal, 16)
                 SettingsRow(label: "Purchase date", value: car.purchaseDate.formatted(date: .long, time: .omitted))
-                if let odometer = car.latestOdometer {
+                if let initialOdometer = car.initialOdometer {
+                    Divider().background(.white.opacity(0.08)).padding(.horizontal, 16)
+                    SettingsRow(label: "Initial odometer", value: "\(Int(initialOdometer).formatted()) km")
+                }
+                if let odometer = car.latestOdometer, !car.fuelEntries.isEmpty {
                     Divider().background(.white.opacity(0.08)).padding(.horizontal, 16)
                     SettingsRow(label: "Current odometer", value: "\(Int(odometer).formatted()) km")
                 }
@@ -182,6 +193,20 @@ struct SettingsView: View {
                         }
                         .padding(.vertical, 12)
                         .padding(.horizontal, 16)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            resaleEntryToEdit = entry
+                            showEditResale = true
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                            Button {
+                                resaleEntryToEdit = entry
+                                showEditResale = true
+                            } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }
+                            .tint(Color.ccTeal)
+                        }
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 modelContext.delete(entry)
@@ -299,12 +324,14 @@ struct EditCarSheet: View {
 
     @State private var name: String
     @State private var priceText: String
+    @State private var initialOdometerText: String
     @State private var purchaseDate: Date
 
     init(car: Car) {
         self.car = car
         _name = State(initialValue: car.name)
         _priceText = State(initialValue: String(format: "%.2f", car.purchasePrice))
+        _initialOdometerText = State(initialValue: car.initialOdometer.map { String(Int($0)) } ?? "")
         _purchaseDate = State(initialValue: car.purchaseDate)
     }
 
@@ -321,6 +348,7 @@ struct EditCarSheet: View {
                 VStack(spacing: 14) {
                     GlassInputField(title: "Car name", text: $name, placeholder: "e.g. VW Golf")
                     GlassInputField(title: "Purchase price (EUR)", text: $priceText, placeholder: "e.g. 25000", keyboardType: .decimalPad)
+                    GlassInputField(title: "Initial odometer (km)", text: $initialOdometerText, placeholder: "e.g. 84200", keyboardType: .numberPad)
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Purchase date")
@@ -348,6 +376,7 @@ struct EditCarSheet: View {
                         if let price = Double(priceText.replacingOccurrences(of: ",", with: ".")) {
                             car.purchasePrice = price
                         }
+                        car.initialOdometer = Double(initialOdometerText.replacingOccurrences(of: ",", with: "."))
                         car.purchaseDate = purchaseDate
                         dismiss()
                     }
