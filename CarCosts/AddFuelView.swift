@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 
+// Top-level so FuelFieldRow can reference it for the focus binding
+enum FuelField: Hashable, CaseIterable { case liters, total, ppl }
+
 struct AddFuelView: View {
     let car: Car
     var entryToEdit: FuelEntry? = nil
@@ -13,9 +16,13 @@ struct AddFuelView: View {
     @State private var pricePerLiterText = ""
     @State private var odometerText = ""
     @State private var filledToFull = true
+
+    // Which field was last auto-filled; nil means all values are user-provided
     @State private var calculatedField: FuelField?
+    // Guard against onChange firing when we programmatically set a value
     @State private var isApplyingCalculatedValue = false
-    @State private var userEditedFields: Set<FuelField> = []
+
+    @FocusState private var focusedField: FuelField?
 
     private var prefillOdometer: String {
         car.latestOdometer.map { formatOdometer($0 + 1) } ?? ""
@@ -85,25 +92,28 @@ struct AddFuelView: View {
                             title: "Litres",
                             text: $litersText,
                             isCalculated: calculatedField == .liters,
-                            placeholder: "e.g. 42.5"
+                            placeholder: "e.g. 42.5",
+                            focus: $focusedField,
+                            fieldId: .liters
                         )
-                        .onChange(of: litersText) { _, _ in handleUserChange(to: .liters) }
 
                         FuelFieldRow(
                             title: "Total cost (EUR)",
                             text: $totalCostText,
                             isCalculated: calculatedField == .total,
-                            placeholder: "e.g. 67.20"
+                            placeholder: "e.g. 67.20",
+                            focus: $focusedField,
+                            fieldId: .total
                         )
-                        .onChange(of: totalCostText) { _, _ in handleUserChange(to: .total) }
 
                         FuelFieldRow(
                             title: "Price per litre (EUR/L)",
                             text: $pricePerLiterText,
                             isCalculated: calculatedField == .ppl,
-                            placeholder: "e.g. 1.599"
+                            placeholder: "e.g. 1.599",
+                            focus: $focusedField,
+                            fieldId: .ppl
                         )
-                        .onChange(of: pricePerLiterText) { _, _ in handleUserChange(to: .ppl) }
 
                         Divider()
                             .background(.white.opacity(0.15))
@@ -140,11 +150,30 @@ struct AddFuelView: View {
                     .padding(.bottom, 40)
                 }
             }
+            .onTapGesture { focusedField = nil }
         }
         .presentationBackground(ccBaseColor)
+        // Odometer formatting
         .onChange(of: odometerText) { _, newValue in
             guard !isApplyingCalculatedValue else { return }
             formatOdometerInput(newValue)
+        }
+        // Detect user manually editing the auto-calculated field — it becomes theirs
+        .onChange(of: litersText) { _, _ in
+            guard !isApplyingCalculatedValue, calculatedField == .liters else { return }
+            calculatedField = nil
+        }
+        .onChange(of: totalCostText) { _, _ in
+            guard !isApplyingCalculatedValue, calculatedField == .total else { return }
+            calculatedField = nil
+        }
+        .onChange(of: pricePerLiterText) { _, _ in
+            guard !isApplyingCalculatedValue, calculatedField == .ppl else { return }
+            calculatedField = nil
+        }
+        // Trigger calculation when the user finishes a field (focus moves away)
+        .onChange(of: focusedField) { _, _ in
+            recalculateIfReady()
         }
         .onAppear {
             guard let entryToEdit else { return }
@@ -154,106 +183,74 @@ struct AddFuelView: View {
             odometerText = formatOdometer(entryToEdit.odometerReading)
             date = entryToEdit.date
             filledToFull = entryToEdit.filledToFull
-            userEditedFields = [.liters, .total, .ppl]
         }
     }
 
-    private enum FuelField: CaseIterable { case liters, total, ppl }
+    // MARK: - Calculation
 
-    private func handleUserChange(to field: FuelField) {
-        guard !isApplyingCalculatedValue else { return }
+    private func recalculateIfReady() {
+        let l = decimalValue(from: litersText)
+        let t = decimalValue(from: totalCostText)
+        let p = decimalValue(from: pricePerLiterText)
 
-        if fieldText(for: field).isEmpty {
-            userEditedFields.remove(field)
-        } else {
-            userEditedFields.insert(field)
+        func hasValue(_ f: FuelField) -> Bool {
+            switch f {
+            case .liters: return l != nil
+            case .total:  return t != nil
+            case .ppl:    return p != nil
+            }
         }
 
-        if calculatedField == field {
-            calculatedField = nil
-        }
+        // Fields the user has manually filled (everything except the auto-calculated one)
+        let manualFields = FuelField.allCases.filter { $0 != calculatedField && hasValue($0) }
 
-        recalculate()
-    }
-
-    private func recalculate() {
-        let liters = decimalValue(from: litersText)
-        let total = decimalValue(from: totalCostText)
-        let pricePerLiter = decimalValue(from: pricePerLiterText)
-
-        let validFields: [FuelField] = [
-            liters.map { _ in FuelField.liters },
-            total.map { _ in FuelField.total },
-            pricePerLiter.map { _ in FuelField.ppl }
-        ].compactMap { $0 }
-
-        let derivedCandidate = calculatedField.flatMap { userEditedFields.contains($0) ? nil : $0 }
-        let eligibleMissingFields = FuelField.allCases.filter {
-            !userEditedFields.contains($0) && (!validFields.contains($0) || $0 == derivedCandidate)
-        }
-
-        guard (validFields.count == 2 || (validFields.count == 3 && derivedCandidate != nil)), eligibleMissingFields.count == 1 else {
-            calculatedField = nil
+        guard manualFields.count == 2 else {
+            // Lost one of the inputs — clear the stale calculated value
+            if let cf = calculatedField, manualFields.count < 2 {
+                setField(cf, nil)
+                calculatedField = nil
+            }
             return
         }
 
-        let missingField = eligibleMissingFields[0]
-
-        if missingField == .liters, let total, let pricePerLiter, pricePerLiter > 0 {
-            calculatedField = .liters
-            setLiters(total / pricePerLiter)
-        } else if missingField == .total, let liters, let pricePerLiter {
-            calculatedField = .total
-            setTotal(liters * pricePerLiter)
-        } else if missingField == .ppl, let liters, let total, liters > 0 {
-            calculatedField = .ppl
-            setPPL(total / liters)
+        // Which field to fill in: prefer the previously calculated one, else the empty one
+        let toCalc: FuelField
+        if let cf = calculatedField {
+            toCalc = cf
+        } else if let empty = FuelField.allCases.first(where: { !hasValue($0) }) {
+            toCalc = empty
         } else {
-            calculatedField = nil
+            return // all three are manually filled — nothing to do
         }
+
+        // Never fill a field the user is actively typing in
+        guard toCalc != focusedField else { return }
+
+        switch toCalc {
+        case .liters:
+            guard let t, let p, p > 0 else { return }
+            setField(.liters, t / p)
+        case .total:
+            guard let l, let p else { return }
+            setField(.total, l * p)
+        case .ppl:
+            guard let l, let t, l > 0 else { return }
+            setField(.ppl, t / l)
+        }
+        calculatedField = toCalc
     }
 
-    private func setLiters(_ v: Double) {
-        isApplyingCalculatedValue = true
-        litersText = String(format: "%.3f", v)
-        isApplyingCalculatedValue = false
-    }
-
-    private func setTotal(_ v: Double) {
-        isApplyingCalculatedValue = true
-        totalCostText = String(format: "%.2f", v)
-        isApplyingCalculatedValue = false
-    }
-
-    private func setPPL(_ v: Double) {
-        isApplyingCalculatedValue = true
-        pricePerLiterText = String(format: "%.4f", v)
-        isApplyingCalculatedValue = false
-    }
-
-    private func clear(field: FuelField) {
+    private func setField(_ field: FuelField, _ value: Double?) {
         isApplyingCalculatedValue = true
         switch field {
-        case .liters:
-            litersText = ""
-        case .total:
-            totalCostText = ""
-        case .ppl:
-            pricePerLiterText = ""
+        case .liters: litersText      = value.map { String(format: "%.3f", $0) } ?? ""
+        case .total:  totalCostText   = value.map { String(format: "%.2f", $0) } ?? ""
+        case .ppl:    pricePerLiterText = value.map { String(format: "%.4f", $0) } ?? ""
         }
         isApplyingCalculatedValue = false
     }
 
-    private func fieldText(for field: FuelField) -> String {
-        switch field {
-        case .liters:
-            litersText
-        case .total:
-            totalCostText
-        case .ppl:
-            pricePerLiterText
-        }
-    }
+    // MARK: - Helpers
 
     private func decimalValue(from text: String) -> Double? {
         Double(text.replacingOccurrences(of: ",", with: "."))
@@ -312,6 +309,8 @@ struct FuelFieldRow: View {
     @Binding var text: String
     let isCalculated: Bool
     let placeholder: String
+    var focus: FocusState<FuelField?>.Binding
+    let fieldId: FuelField
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -332,7 +331,7 @@ struct FuelFieldRow: View {
                 .padding(.vertical, 12)
                 .ccCardSurface(cornerRadius: 12)
                 .foregroundStyle(isCalculated ? Color.ccTextSecondary : Color.ccTextPrimary)
-                .disabled(false)
+                .focused(focus, equals: fieldId)
         }
     }
 }
