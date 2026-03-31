@@ -3,6 +3,7 @@ import SwiftData
 
 struct AddCostView: View {
     let car: Car
+    var editingTarget: EditableCostItem? = nil
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -22,6 +23,8 @@ struct AddCostView: View {
         return nameOK && Double(amountText.replacingOccurrences(of: ",", with: ".")) != nil
     }
 
+    private var isEditing: Bool { editingTarget != nil }
+
     var body: some View {
         ZStack {
             AppBackground()
@@ -32,7 +35,7 @@ struct AddCostView: View {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 40))
                             .foregroundStyle(Color.ccTeal)
-                        Text("Log Cost")
+                        Text(isEditing ? "Edit Cost" : "Log Cost")
                             .font(.title2.bold())
                             .foregroundStyle(Color.ccTextPrimary)
                     }
@@ -52,9 +55,11 @@ struct AddCostView: View {
                             Spacer()
                             Toggle("", isOn: $isRecurring)
                                 .tint(Color.ccTeal)
+                                .disabled(isEditing)
                         }
                         .padding(14)
                         .ccCardSurface(cornerRadius: 14)
+                        .opacity(isEditing ? 0.75 : 1)
 
                         // Name
                         GlassInputField(title: "Name", text: $name, placeholder: isRecurring ? "e.g. Insurance" : "e.g. Tyre change")
@@ -138,7 +143,7 @@ struct AddCostView: View {
                             .ccCardSurface(cornerRadius: 14)
                             .foregroundStyle(Color.ccTextSecondary)
 
-                        Button("Save") { save() }
+                        Button(isEditing ? "Update" : "Save") { save() }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .ccCardSurface(cornerRadius: 14)
@@ -152,23 +157,70 @@ struct AddCostView: View {
             }
         }
         .presentationBackground(ccBaseColor)
+        .onAppear {
+            guard let editingTarget else { return }
+            switch editingTarget {
+            case .recurring(let cost):
+                name = cost.name
+                monthlyAmountText = String(format: "%.2f", cost.monthlyAmount)
+                date = cost.startDate
+                category = cost.category
+                isRecurring = true
+            case .oneTime(let cost):
+                name = cost.name
+                amountText = String(format: "%.2f", cost.amount)
+                date = cost.date
+                category = cost.category
+                notes = cost.notes
+                isRecurring = false
+            }
+        }
     }
 
     private func save() {
         if isRecurring {
             guard let monthly = Double(monthlyAmountText.replacingOccurrences(of: ",", with: ".")),
                   !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-            let cost = RecurringCost(name: name.trimmingCharacters(in: .whitespaces), monthlyAmount: monthly, startDate: date, category: category)
-            cost.car = car
-            modelContext.insert(cost)
+            if case .recurring(let cost) = editingTarget {
+                cost.name = name.trimmingCharacters(in: .whitespaces)
+                cost.monthlyAmount = monthly
+                cost.startDate = date
+                cost.category = category
+            } else {
+                let cost = RecurringCost(name: name.trimmingCharacters(in: .whitespaces), monthlyAmount: monthly, startDate: date, category: category)
+                cost.car = car
+                modelContext.insert(cost)
+            }
         } else {
             guard let amount = Double(amountText.replacingOccurrences(of: ",", with: ".")),
                   !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-            let cost = OtherCost(name: name.trimmingCharacters(in: .whitespaces), amount: amount, date: date, category: category, notes: notes)
-            cost.car = car
-            modelContext.insert(cost)
+            if case .oneTime(let cost) = editingTarget {
+                cost.name = name.trimmingCharacters(in: .whitespaces)
+                cost.amount = amount
+                cost.date = date
+                cost.category = category
+                cost.notes = notes
+            } else {
+                let cost = OtherCost(name: name.trimmingCharacters(in: .whitespaces), amount: amount, date: date, category: category, notes: notes)
+                cost.car = car
+                modelContext.insert(cost)
+            }
         }
         dismiss()
+    }
+}
+
+enum EditableCostItem: Identifiable {
+    case recurring(RecurringCost)
+    case oneTime(OtherCost)
+
+    var id: PersistentIdentifier {
+        switch self {
+        case .recurring(let cost):
+            cost.persistentModelID
+        case .oneTime(let cost):
+            cost.persistentModelID
+        }
     }
 }
 

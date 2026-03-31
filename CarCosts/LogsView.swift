@@ -7,6 +7,8 @@ struct LogsView: View {
 
     @State private var showFuelLog = false
     @State private var showCostLog = false
+    @State private var fuelEntryToEdit: EditableFuelEntry?
+    @State private var costEntryToEdit: EditableCostItem?
     @State private var logTab: LogTab = .fuel
 
     enum LogTab: String, CaseIterable { case fuel = "Fuel", costs = "Costs" }
@@ -27,7 +29,7 @@ struct LogsView: View {
         NavigationStack {
             ZStack {
                 AppBackground()
-
+                
                 VStack(spacing: 0) {
                     // Header
                     HStack {
@@ -47,7 +49,7 @@ struct LogsView: View {
                     .padding(.horizontal)
                     .padding(.top, 8)
                     .padding(.bottom, 12)
-
+                    
                     // Segment
                     Picker("Log type", selection: $logTab) {
                         ForEach(LogTab.allCases, id: \.self) { tab in
@@ -58,20 +60,14 @@ struct LogsView: View {
                     .colorScheme(.dark)
                     .padding(.horizontal)
                     .padding(.bottom, 12)
-
-                    // Content
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            if logTab == .fuel {
-                                fuelSection
-                            } else {
-                                costsSection
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.bottom, 100)
+                    
+                    if logTab == .fuel {
+                        fuelSection
+                    } else {
+                        costsSection
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
             .navigationBarHidden(true)
             .safeAreaInset(edge: .bottom) {
@@ -86,8 +82,14 @@ struct LogsView: View {
             .sheet(isPresented: $showFuelLog) {
                 AddFuelView(car: car)
             }
+            .sheet(item: $fuelEntryToEdit) { item in
+                AddFuelView(car: car, entryToEdit: item.entry)
+            }
             .sheet(isPresented: $showCostLog) {
                 AddCostView(car: car)
+            }
+            .sheet(item: $costEntryToEdit) { item in
+                AddCostView(car: car, editingTarget: item)
             }
         }
     }
@@ -97,66 +99,143 @@ struct LogsView: View {
         if sortedFuel.isEmpty {
             emptyState(icon: "fuelpump", message: "No fill-ups logged yet")
         } else {
-            let entries = Array(sortedFuel.enumerated())
-            VStack(spacing: 0) {
+            List {
+                let entries = Array(sortedFuel.enumerated())
                 ForEach(entries, id: \.element.persistentModelID) { idx, entry in
                     FuelEntryRow(entry: entry, prev: idx < sortedFuel.count - 1 ? sortedFuel[idx + 1] : nil)
-                    if idx < entries.count - 1 {
-                        Divider().background(.white.opacity(0.08)).padding(.horizontal, 16)
-                    }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            fuelEntryToEdit = EditableFuelEntry(entry: entry)
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                modelContext.delete(entry)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                        .listRowSeparatorTint(Color.white.opacity(0.10))
                 }
             }
-            .ccCardSurface(cornerRadius: 18)
-            .padding(.top, 4)
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.ccSurfaceStroke, lineWidth: 1)
+            )
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.ccSurface)
+            )
+            .padding(.horizontal)
+            .scrollDisabled(true)
+            .frame(height: CGFloat(sortedFuel.count) * 58 + 2)
+            .padding(.bottom, 100)
         }
     }
 
     @ViewBuilder
     private var costsSection: some View {
-        VStack(spacing: 16) {
-            // Recurring costs
-            if !sortedRecurring.isEmpty {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Recurring")
-                        .font(.caption)
-                        .foregroundStyle(Color.ccTextSecondary)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
+        if sortedRecurring.isEmpty && sortedCosts.isEmpty {
+            emptyState(icon: "banknote", message: "No costs logged yet")
+        } else {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    if !sortedRecurring.isEmpty {
+                        sectionHeader("Recurring")
+                            .padding(.horizontal)
 
-                    ForEach(Array(sortedRecurring.enumerated()), id: \.element.persistentModelID) { idx, cost in
-                        RecurringCostRow(cost: cost)
-                        if idx < sortedRecurring.count - 1 {
-                            Divider().background(.white.opacity(0.08)).padding(.horizontal, 16)
+                        List {
+                            ForEach(sortedRecurring, id: \.persistentModelID) { cost in
+                                RecurringCostRow(cost: cost)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        costEntryToEdit = .recurring(cost)
+                                    }
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        Button(role: .destructive) {
+                                            modelContext.delete(cost)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowBackground(Color.clear)
+                                    .listRowSeparatorTint(Color.white.opacity(0.10))
+                            }
                         }
+                        .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .scrollDisabled(true)
+                        .background(Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.ccSurfaceStroke, lineWidth: 1)
+                        )
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(Color.ccSurface)
+                        )
+                        .padding(.horizontal)
+                        .frame(height: CGFloat(sortedRecurring.count) * 58 + 2)
+                    }
+
+                    if !sortedCosts.isEmpty {
+                        sectionHeader("One-Time")
+                            .padding(.horizontal)
+
+                        List {
+                            ForEach(sortedCosts, id: \.persistentModelID) { cost in
+                                OtherCostRow(cost: cost)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        costEntryToEdit = .oneTime(cost)
+                                    }
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        Button(role: .destructive) {
+                                            modelContext.delete(cost)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowBackground(Color.clear)
+                                    .listRowSeparatorTint(Color.white.opacity(0.10))
+                            }
+                        }
+                        .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .scrollDisabled(true)
+                        .background(Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.ccSurfaceStroke, lineWidth: 1)
+                        )
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(Color.ccSurface)
+                        )
+                        .padding(.horizontal)
+                        .frame(height: CGFloat(sortedCosts.count) * 58 + 2)
                     }
                 }
-                .ccCardSurface(cornerRadius: 18)
             }
-
-            // One-time costs
-            if !sortedCosts.isEmpty {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("One-time")
-                        .font(.caption)
-                        .foregroundStyle(Color.ccTextSecondary)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-
-                    ForEach(Array(sortedCosts.enumerated()), id: \.element.persistentModelID) { idx, cost in
-                        OtherCostRow(cost: cost)
-                        if idx < sortedCosts.count - 1 {
-                            Divider().background(.white.opacity(0.08)).padding(.horizontal, 16)
-                        }
-                    }
-                }
-                .ccCardSurface(cornerRadius: 18)
-            }
-
-            if sortedRecurring.isEmpty && sortedCosts.isEmpty {
-                emptyState(icon: "banknote", message: "No costs logged yet")
-            }
+            .padding(.bottom, 100)
         }
-        .padding(.top, 4)
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.caption)
+            .foregroundStyle(Color.ccTextSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .textCase(nil)
     }
 
     private func emptyState(icon: String, message: String) -> some View {
@@ -171,8 +250,15 @@ struct LogsView: View {
         .frame(maxWidth: .infinity)
         .padding(40)
         .ccCardSurface(cornerRadius: 18)
+        .padding(.horizontal)
         .padding(.top, 4)
+        .padding(.bottom, 100)
     }
+}
+
+private struct EditableFuelEntry: Identifiable {
+    let entry: FuelEntry
+    var id: PersistentIdentifier { entry.persistentModelID }
 }
 
 struct LogCostFAB: View {
@@ -343,4 +429,8 @@ struct OtherCostRow: View {
         .padding(.vertical, 12)
         .padding(.horizontal, 16)
     }
+}
+
+#Preview {
+    LogsView(car: Car(name: "", purchasePrice: 1, purchaseDate: Date()))
 }

@@ -6,9 +6,9 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var showAddResale = false
-    @State private var resaleEntryToEdit: ResaleValueEntry?
-    @State private var showEditResale = false
+    @State private var resaleEntryToEdit: EditableResaleEntry?
     @State private var showAddRecurring = false
+    @State private var recurringCostToEdit: EditableCostItem?
     @State private var showEditCar = false
 
     var body: some View {
@@ -47,10 +47,11 @@ struct SettingsView: View {
             .sheet(isPresented: $showAddResale) {
                 AddResaleValueSheet(car: car, onSave: {})
             }
-            .sheet(isPresented: $showEditResale) {
-                if let resaleEntryToEdit {
-                    AddResaleValueSheet(car: car, entryToEdit: resaleEntryToEdit, onSave: {})
-                }
+            .sheet(item: $resaleEntryToEdit) { item in
+                AddResaleValueSheet(car: car, entryToEdit: item.entry, onSave: {})
+            }
+            .sheet(item: $recurringCostToEdit) { item in
+                AddCostView(car: car, editingTarget: item)
             }
             .sheet(isPresented: $showEditCar) {
                 EditCarSheet(car: car)
@@ -163,64 +164,39 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .ccCardSurface(cornerRadius: 18)
             } else {
-                VStack(spacing: 0) {
+                List {
                     ForEach(Array(sorted.enumerated()), id: \.element.persistentModelID) { idx, entry in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(formatEUR(entry.value))
-                                    .font(.subheadline.bold())
-                                    .foregroundStyle(Color.ccTextPrimary)
-                                Text(entry.date.formatted(date: .long, time: .omitted))
-                                    .font(.caption2)
-                                    .foregroundStyle(Color.ccTextMuted)
+                        ResaleValueRow(entry: entry, isLatest: idx == 0)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                resaleEntryToEdit = EditableResaleEntry(entry: entry)
                             }
-                            Spacer()
-                            if idx == 0 {
-                                Text("Latest")
-                                    .font(.caption2)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 3)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                            .fill(Color.ccSurface)
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                            .stroke(Color.ccTeal.opacity(0.35), lineWidth: 1)
-                                    )
-                                    .foregroundStyle(Color.ccTeal)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    modelContext.delete(entry)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
-                        }
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 16)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            resaleEntryToEdit = entry
-                            showEditResale = true
-                        }
-                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                            Button {
-                                resaleEntryToEdit = entry
-                                showEditResale = true
-                            } label: {
-                                Label("Edit", systemImage: "pencil")
-                            }
-                            .tint(Color.ccTeal)
-                        }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                modelContext.delete(entry)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-
-                        if idx < sorted.count - 1 {
-                            Divider().background(.white.opacity(0.08)).padding(.horizontal, 16)
-                        }
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                            .listRowSeparatorTint(Color.white.opacity(0.10))
                     }
                 }
-                .ccCardSurface(cornerRadius: 18)
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .scrollDisabled(true)
+                .background(Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.ccSurfaceStroke, lineWidth: 1)
+                )
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.ccSurface)
+                )
+                .frame(height: CGFloat(sorted.count) * 58 + 2)
             }
         }
         .padding(.horizontal)
@@ -253,44 +229,110 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .ccCardSurface(cornerRadius: 18)
             } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(sorted.enumerated()), id: \.element.persistentModelID) { idx, cost in
-                        HStack(spacing: 12) {
-                            Image(systemName: cost.category.systemImage)
-                                .font(.callout)
-                                .foregroundStyle(Color.ccTeal.opacity(0.85))
-                                .frame(width: 28)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(cost.name)
-                                    .font(.subheadline.bold())
-                                    .foregroundStyle(Color.ccTextPrimary)
-                                Text(cost.category.rawValue + " · from \(cost.startDate.formatted(date: .abbreviated, time: .omitted))")
-                                    .font(.caption2)
-                                    .foregroundStyle(Color.ccTextMuted)
+                List {
+                    ForEach(sorted, id: \.persistentModelID) { cost in
+                        RecurringCostSettingsRow(cost: cost)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                recurringCostToEdit = .recurring(cost)
                             }
-                            Spacer()
-                            Text("\(formatEUR(cost.monthlyAmount))/mo")
-                                .font(.subheadline.bold())
-                                .foregroundStyle(Color.ccTextPrimary)
-                        }
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 16)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                modelContext.delete(cost)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    modelContext.delete(cost)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
-                        }
-                        if idx < sorted.count - 1 {
-                            Divider().background(.white.opacity(0.08)).padding(.horizontal, 16)
-                        }
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                            .listRowSeparatorTint(Color.white.opacity(0.10))
                     }
                 }
-                .ccCardSurface(cornerRadius: 18)
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .scrollDisabled(true)
+                .background(Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.ccSurfaceStroke, lineWidth: 1)
+                )
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.ccSurface)
+                )
+                .frame(height: CGFloat(sorted.count) * 58 + 2)
             }
         }
         .padding(.horizontal)
+    }
+}
+
+private struct EditableResaleEntry: Identifiable {
+    let entry: ResaleValueEntry
+    var id: PersistentIdentifier { entry.persistentModelID }
+}
+
+private struct ResaleValueRow: View {
+    let entry: ResaleValueEntry
+    let isLatest: Bool
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(formatEUR(entry.value))
+                    .font(.subheadline.bold())
+                    .foregroundStyle(Color.ccTextPrimary)
+                Text(entry.date.formatted(date: .long, time: .omitted))
+                    .font(.caption2)
+                    .foregroundStyle(Color.ccTextMuted)
+            }
+            Spacer()
+            if isLatest {
+                Text("Latest")
+                    .font(.caption2)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(Color.ccSurface)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .stroke(Color.ccTeal.opacity(0.35), lineWidth: 1)
+                    )
+                    .foregroundStyle(Color.ccTeal)
+            }
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+    }
+}
+
+private struct RecurringCostSettingsRow: View {
+    let cost: RecurringCost
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: cost.category.systemImage)
+                .font(.callout)
+                .foregroundStyle(Color.ccTeal.opacity(0.85))
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(cost.name)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(Color.ccTextPrimary)
+                Text(cost.category.rawValue + " · from \(cost.startDate.formatted(date: .abbreviated, time: .omitted))")
+                    .font(.caption2)
+                    .foregroundStyle(Color.ccTextMuted)
+            }
+            Spacer()
+            Text("\(formatEUR(cost.monthlyAmount))/mo")
+                .font(.subheadline.bold())
+                .foregroundStyle(Color.ccTextPrimary)
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
     }
 }
 

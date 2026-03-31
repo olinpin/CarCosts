@@ -3,6 +3,7 @@ import SwiftData
 
 struct AddFuelView: View {
     let car: Car
+    var entryToEdit: FuelEntry? = nil
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -28,6 +29,8 @@ struct AddFuelView: View {
         return true
     }
 
+    private var isEditing: Bool { entryToEdit != nil }
+
     var body: some View {
         ZStack {
             AppBackground()
@@ -38,7 +41,7 @@ struct AddFuelView: View {
                         Image(systemName: "fuelpump.fill")
                             .font(.system(size: 40))
                             .foregroundStyle(Color.ccAmber)
-                        Text("Log Fill-Up")
+                        Text(isEditing ? "Edit Fill-Up" : "Log Fill-Up")
                             .font(.title2.bold())
                             .foregroundStyle(Color.ccTextPrimary)
                     }
@@ -110,7 +113,7 @@ struct AddFuelView: View {
                             .ccCardSurface(cornerRadius: 14)
                             .foregroundStyle(Color.ccTextSecondary)
 
-                        Button("Save") { saveFuel() }
+                        Button(isEditing ? "Update" : "Save") { saveFuel() }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .ccCardSurface(cornerRadius: 14)
@@ -127,6 +130,15 @@ struct AddFuelView: View {
         .onChange(of: odometerText) { _, newValue in
             guard !isApplyingCalculatedValue else { return }
             formatOdometerInput(newValue)
+        }
+        .onAppear {
+            guard let entryToEdit else { return }
+            litersText = String(format: "%.3f", entryToEdit.liters)
+            totalCostText = String(format: "%.2f", entryToEdit.totalCost)
+            pricePerLiterText = String(format: "%.4f", entryToEdit.pricePerLiter)
+            odometerText = formatOdometer(entryToEdit.odometerReading)
+            date = entryToEdit.date
+            userEditedFields = [.liters, .total, .ppl]
         }
     }
 
@@ -263,9 +275,17 @@ struct AddFuelView: View {
               let ppl = decimalValue(from: pricePerLiterText),
               let odometer = odometerValue(from: odometerText) else { return }
 
-        let entry = FuelEntry(date: date, liters: liters, totalCost: total, pricePerLiter: ppl, odometerReading: odometer)
-        entry.car = car
-        modelContext.insert(entry)
+        if let entryToEdit {
+            entryToEdit.date = date
+            entryToEdit.liters = liters
+            entryToEdit.totalCost = total
+            entryToEdit.pricePerLiter = ppl
+            entryToEdit.odometerReading = odometer
+        } else {
+            let entry = FuelEntry(date: date, liters: liters, totalCost: total, pricePerLiter: ppl, odometerReading: odometer)
+            entry.car = car
+            modelContext.insert(entry)
+        }
         dismiss()
     }
 }
