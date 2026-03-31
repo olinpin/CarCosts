@@ -14,6 +14,7 @@ struct AddCostView: View {
     @State private var notes = ""
     @State private var isRecurring = false
     @State private var monthlyAmountText = ""
+    @State private var selectedTrip: Trip?
 
     private var canSave: Bool {
         let nameOK = !name.trimmingCharacters(in: .whitespaces).isEmpty
@@ -132,6 +133,8 @@ struct AddCostView: View {
                                     .ccCardSurface(cornerRadius: 12)
                                     .foregroundStyle(Color.ccTextPrimary)
                             }
+
+                            TripPickerRow(car: car, selectedTrip: $selectedTrip)
                         }
                     }
                     .padding(.horizontal, 24)
@@ -172,6 +175,7 @@ struct AddCostView: View {
                 date = cost.date
                 category = cost.category
                 notes = cost.notes
+                selectedTrip = cost.trip
                 isRecurring = false
             }
         }
@@ -200,8 +204,10 @@ struct AddCostView: View {
                 cost.date = date
                 cost.category = category
                 cost.notes = notes
+                cost.trip = selectedTrip
             } else {
                 let cost = OtherCost(name: name.trimmingCharacters(in: .whitespaces), amount: amount, date: date, category: category, notes: notes)
+                cost.trip = selectedTrip
                 cost.car = car
                 modelContext.insert(cost)
             }

@@ -61,6 +61,7 @@ final class Car {
     @Relationship(deleteRule: .cascade) var resaleValueEntries: [ResaleValueEntry] = []
     @Relationship(deleteRule: .cascade) var recurringCosts: [RecurringCost] = []
     @Relationship(deleteRule: .cascade) var otherCosts: [OtherCost] = []
+    @Relationship(deleteRule: .cascade) var trips: [Trip] = []
 
     init(name: String, purchasePrice: Double, purchaseDate: Date, initialOdometer: Double? = nil) {
         self.name = name
@@ -92,6 +93,7 @@ final class FuelEntry {
     var pricePerLiter: Double
     var odometerReading: Double
     var filledToFull: Bool = true
+    var trip: Trip?
     var car: Car?
 
     init(date: Date, liters: Double, totalCost: Double, pricePerLiter: Double, odometerReading: Double, filledToFull: Bool = true) {
@@ -146,6 +148,7 @@ final class OtherCost {
     var date: Date
     var categoryRaw: String
     var notes: String
+    var trip: Trip?
     var car: Car?
 
     init(name: String, amount: Double, date: Date, category: CostCategory = .other, notes: String = "") {
@@ -159,5 +162,48 @@ final class OtherCost {
     var category: CostCategory {
         get { CostCategory(rawValue: categoryRaw) ?? .other }
         set { categoryRaw = newValue.rawValue }
+    }
+}
+
+@Model
+final class Trip {
+    var name: String
+    var createdAt: Date
+    var car: Car?
+    @Relationship(deleteRule: .nullify, inverse: \FuelEntry.trip) var fuelEntries: [FuelEntry] = []
+    @Relationship(deleteRule: .nullify, inverse: \OtherCost.trip) var otherCosts: [OtherCost] = []
+
+    init(name: String) {
+        self.name = name
+        self.createdAt = Date()
+    }
+
+    var totalFuelCost: Double {
+        fuelEntries.reduce(0) { $0 + $1.totalCost }
+    }
+
+    var totalOtherCost: Double {
+        otherCosts.reduce(0) { $0 + $1.amount }
+    }
+
+    var totalCost: Double { totalFuelCost + totalOtherCost }
+
+    // km span from first to last tagged fuel entry by odometer
+    var kmDriven: Double? {
+        let sorted = fuelEntries.sorted { $0.date < $1.date }
+        guard sorted.count >= 2, let first = sorted.first, let last = sorted.last else { return nil }
+        return max(0, last.odometerReading - first.odometerReading)
+    }
+
+    var efficiency: Double? {
+        guard let km = kmDriven, km > 0 else { return nil }
+        let liters = fuelEntries.reduce(0) { $0 + $1.liters }
+        return (liters / km) * 100
+    }
+
+    var dateRange: (start: Date, end: Date)? {
+        let dates = (fuelEntries.map(\.date) + otherCosts.map(\.date)).sorted()
+        guard let first = dates.first, let last = dates.last else { return nil }
+        return (first, last)
     }
 }

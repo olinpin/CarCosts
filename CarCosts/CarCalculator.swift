@@ -154,6 +154,11 @@ struct CarCalculator {
         return Array(result.reversed())
     }
 
+    // Price per litre for each fill-up, oldest first
+    var fuelPriceTrend: [(date: Date, price: Double)] {
+        sortedFuelEntries.map { ($0.date, $0.pricePerLiter) }
+    }
+
     // Per-segment efficiency for line chart, using the full-tank method.
     // Each data point spans from one full-tank fill-up to the next, accumulating
     // liters from any partial fill-ups in between.

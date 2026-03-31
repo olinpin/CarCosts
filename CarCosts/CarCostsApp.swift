@@ -15,7 +15,8 @@ struct CarCostsApp: App {
                 FuelEntry.self,
                 ResaleValueEntry.self,
                 RecurringCost.self,
-                OtherCost.self
+                OtherCost.self,
+                Trip.self
             ])
             // To enable iCloud sync: add CloudKit capability, then use
             // ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)

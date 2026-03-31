@@ -71,6 +71,9 @@ struct StatsView: View {
                         // Efficiency chart
                         efficiencyChart
 
+                        // Fuel price trend
+                        fuelPriceTrendChart
+
                         // Cost breakdown
                         costBreakdownChart
 
@@ -220,6 +223,79 @@ struct StatsView: View {
                 .frame(height: 180)
             } else {
                 emptyChartPlaceholder(data.isEmpty ? "No fill-up data yet" : "Need at least 2 fill-ups")
+            }
+        }
+        .padding(16)
+        .ccCardSurface(cornerRadius: 20)
+        .padding(.horizontal)
+    }
+
+    // MARK: - Fuel Price Trend Chart
+
+    private var fuelPriceTrendChart: some View {
+        let data = calc.fuelPriceTrend
+        let avg = data.isEmpty ? 0.0 : data.map(\.price).reduce(0, +) / Double(data.count)
+
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("Fuel Price")
+                .font(.headline)
+                .foregroundStyle(Color.ccTextPrimary)
+            HStack {
+                Text("Price per litre over time")
+                    .font(.caption)
+                    .foregroundStyle(Color.ccTextSecondary)
+                Spacer()
+                if !data.isEmpty {
+                    Text("avg \(String(format: "%.3f", avg)) €/L")
+                        .font(.caption)
+                        .foregroundStyle(Color.ccTextMuted)
+                }
+            }
+
+            if data.count >= 2 {
+                Chart {
+                    ForEach(data, id: \.date) { item in
+                        LineMark(
+                            x: .value("Date", item.date),
+                            y: .value("€/L", item.price)
+                        )
+                        .foregroundStyle(Color.ccAmber)
+                        .lineStyle(StrokeStyle(lineWidth: 2))
+                        PointMark(
+                            x: .value("Date", item.date),
+                            y: .value("€/L", item.price)
+                        )
+                        .foregroundStyle(Color.ccAmber)
+                        .symbolSize(30)
+                    }
+                    RuleMark(y: .value("Average", avg))
+                        .foregroundStyle(Color.ccAmber.opacity(0.35))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                }
+                .chartXAxis {
+                    AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                            .foregroundStyle(.white.opacity(0.1))
+                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                            .foregroundStyle(.white.opacity(0.5))
+                    }
+                }
+                .chartYAxis {
+                    AxisMarks { value in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                            .foregroundStyle(.white.opacity(0.1))
+                        AxisValueLabel {
+                            if let v = value.as(Double.self) {
+                                Text(String(format: "%.3f", v))
+                                    .font(.caption2)
+                                    .foregroundStyle(.white.opacity(0.5))
+                            }
+                        }
+                    }
+                }
+                .frame(height: 180)
+            } else {
+                emptyChartPlaceholder("No price data yet")
             }
         }
         .padding(16)

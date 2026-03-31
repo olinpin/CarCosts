@@ -16,6 +16,7 @@ struct AddFuelView: View {
     @State private var pricePerLiterText = ""
     @State private var odometerText = ""
     @State private var filledToFull = true
+    @State private var selectedTrip: Trip?
 
     // Which field was last auto-filled; nil means all values are user-provided
     @State private var calculatedField: FuelField?
@@ -128,6 +129,8 @@ struct AddFuelView: View {
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
                         .ccCardSurface(cornerRadius: 12)
+
+                        TripPickerRow(car: car, selectedTrip: $selectedTrip)
                     }
                     .padding(.horizontal, 24)
 
@@ -183,6 +186,7 @@ struct AddFuelView: View {
             odometerText = formatOdometer(entryToEdit.odometerReading)
             date = entryToEdit.date
             filledToFull = entryToEdit.filledToFull
+            selectedTrip = entryToEdit.trip
         }
     }
 
@@ -295,8 +299,10 @@ struct AddFuelView: View {
             entryToEdit.pricePerLiter = ppl
             entryToEdit.odometerReading = odometer
             entryToEdit.filledToFull = filledToFull
+            entryToEdit.trip = selectedTrip
         } else {
             let entry = FuelEntry(date: date, liters: liters, totalCost: total, pricePerLiter: ppl, odometerReading: odometer, filledToFull: filledToFull)
+            entry.trip = selectedTrip
             entry.car = car
             modelContext.insert(entry)
         }

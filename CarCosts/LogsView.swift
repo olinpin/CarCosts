@@ -7,11 +7,13 @@ struct LogsView: View {
 
     @State private var showFuelLog = false
     @State private var showCostLog = false
+    @State private var showNewTrip = false
+    @State private var newTripName = ""
     @State private var fuelEntryToEdit: EditableFuelEntry?
     @State private var costEntryToEdit: EditableCostItem?
     @State private var logTab: LogTab = .fuel
 
-    enum LogTab: String, CaseIterable { case fuel = "Fuel", costs = "Costs" }
+    enum LogTab: String, CaseIterable { case fuel = "Fuel", costs = "Costs", trips = "Trips" }
 
     private var sortedFuel: [FuelEntry] {
         car.fuelEntries.sorted { $0.date > $1.date }
@@ -23,6 +25,10 @@ struct LogsView: View {
 
     private var sortedRecurring: [RecurringCost] {
         car.recurringCosts.sorted { $0.startDate > $1.startDate }
+    }
+
+    private var sortedTrips: [Trip] {
+        car.trips.sorted { $0.createdAt > $1.createdAt }
     }
 
     var body: some View {
@@ -63,8 +69,10 @@ struct LogsView: View {
                     
                     if logTab == .fuel {
                         fuelSection
-                    } else {
+                    } else if logTab == .costs {
                         costsSection
+                    } else {
+                        tripsSection
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -74,13 +82,28 @@ struct LogsView: View {
                 if logTab == .fuel {
                     LogFuelFAB { showFuelLog = true }
                         .padding(.bottom, 8)
-                } else {
+                } else if logTab == .costs {
                     LogCostFAB { showCostLog = true }
+                        .padding(.bottom, 8)
+                } else {
+                    LogTripFAB { showNewTrip = true }
                         .padding(.bottom, 8)
                 }
             }
             .sheet(isPresented: $showFuelLog) {
                 AddFuelView(car: car)
+            }
+            .alert("New Trip", isPresented: $showNewTrip) {
+                TextField("e.g. Spain Vacation", text: $newTripName)
+                Button("Create") {
+                    let trimmed = newTripName.trimmingCharacters(in: .whitespaces)
+                    guard !trimmed.isEmpty else { return }
+                    let trip = Trip(name: trimmed)
+                    trip.car = car
+                    modelContext.insert(trip)
+                    newTripName = ""
+                }
+                Button("Cancel", role: .cancel) { newTripName = "" }
             }
             .sheet(item: $fuelEntryToEdit) { item in
                 AddFuelView(car: car, entryToEdit: item.entry)
@@ -230,6 +253,41 @@ struct LogsView: View {
         }
     }
 
+    @ViewBuilder
+    private var tripsSection: some View {
+        if sortedTrips.isEmpty {
+            emptyState(icon: "map", message: "No trips yet — tap + to create one")
+        } else {
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(sortedTrips, id: \.persistentModelID) { trip in
+                        NavigationLink(destination: TripDetailView(trip: trip)) {
+                            TripRow(trip: trip)
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                modelContext.delete(trip)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.ccSurfaceStroke, lineWidth: 1)
+                )
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.ccSurface)
+                )
+                .padding(.horizontal)
+                .padding(.bottom, 100)
+            }
+        }
+    }
+
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
             .font(.caption)
@@ -315,6 +373,9 @@ struct FuelEntryRow: View {
                     Text("@ \(formatEUR(entry.pricePerLiter))/L")
                         .font(.caption)
                         .foregroundStyle(Color.ccTextSecondary)
+                    if let trip = entry.trip {
+                        TripBadge(name: trip.name)
+                    }
                 }
                 HStack(spacing: 8) {
                     Text("\(Int(entry.odometerReading).formatted()) km")
@@ -399,9 +460,14 @@ struct OtherCostRow: View {
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(cost.name)
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.white)
+                HStack(spacing: 6) {
+                    Text(cost.name)
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.white)
+                    if let trip = cost.trip {
+                        TripBadge(name: trip.name)
+                    }
+                }
                 HStack(spacing: 6) {
                     Text(cost.category.rawValue)
                         .font(.caption2)
