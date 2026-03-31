@@ -39,7 +39,7 @@ struct AddFuelView: View {
                     VStack(spacing: 6) {
                         Image(systemName: "fuelpump.fill")
                             .font(.system(size: 40))
-                            .foregroundStyle(.cyan)
+                            .foregroundStyle(Color.ccAmber)
                         Text("Log Fill-Up")
                             .font(.title2.bold())
                             .foregroundStyle(.white)
@@ -125,6 +125,7 @@ struct AddFuelView: View {
                 }
             }
         }
+        .presentationBackground(ccBaseColor)
     }
 
     private enum FuelField { case liters, total, ppl }
@@ -183,7 +184,7 @@ struct FuelFieldRow: View {
                     Spacer()
                     Text("calculated")
                         .font(.caption2)
-                        .foregroundStyle(.cyan.opacity(0.7))
+                        .foregroundStyle(Color.ccTeal.opacity(0.8))
                 }
             }
             TextField(placeholder, text: $text)

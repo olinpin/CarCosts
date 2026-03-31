@@ -106,7 +106,7 @@ struct SettingsView: View {
                         Spacer()
                         if car.promptSchedule == schedule {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.cyan)
+                                .foregroundStyle(Color.ccTeal)
                         }
                     }
                     .padding(.vertical, 14)
@@ -170,7 +170,7 @@ struct SettingsView: View {
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
                                     .glassEffect(in: RoundedRectangle(cornerRadius: 6))
-                                    .foregroundStyle(.cyan)
+                                    .foregroundStyle(Color.ccTeal)
                             }
                         }
                         .padding(.vertical, 12)
@@ -226,7 +226,7 @@ struct SettingsView: View {
                         HStack(spacing: 12) {
                             Image(systemName: cost.category.systemImage)
                                 .font(.callout)
-                                .foregroundStyle(.purple.opacity(0.8))
+                                .foregroundStyle(Color.ccTeal.opacity(0.85))
                                 .frame(width: 28)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(cost.name)
@@ -355,6 +355,7 @@ struct EditCarSheet: View {
                 Spacer()
             }
         }
+        .presentationBackground(ccBaseColor)
     }
 }
 

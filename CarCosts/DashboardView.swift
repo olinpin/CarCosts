@@ -10,6 +10,7 @@ struct DashboardView: View {
     @State private var customEnd: Date = Date()
     @State private var showCustomPicker = false
     @State private var showResaleSheet = false
+    @State private var showAddFuel = false
     @State private var resaleDismissed = false
 
     private var calc: CarCalculator { CarCalculator(car: car) }
@@ -102,14 +103,14 @@ struct DashboardView: View {
                                 subtitle: "per km",
                                 value: fuelOnlyCost.map { formatCostPerKm($0) },
                                 icon: "fuelpump.fill",
-                                accentColor: .cyan
+                                accentColor: .ccAmber
                             )
                             MetricCard(
                                 title: "Total Cost",
                                 subtitle: "per km",
                                 value: totalCost.map { formatCostPerKm($0) },
                                 icon: "chart.pie.fill",
-                                accentColor: .purple
+                                accentColor: .ccTeal
                             )
                         }
                         .padding(.horizontal)
@@ -149,12 +150,44 @@ struct DashboardView: View {
                 }
             }
             .navigationBarHidden(true)
+            .safeAreaInset(edge: .bottom) {
+                LogFuelFAB { showAddFuel = true }
+                    .padding(.bottom, 8)
+            }
+            .sheet(isPresented: $showAddFuel) {
+                AddFuelView(car: car)
+            }
             .sheet(isPresented: $showResaleSheet) {
                 AddResaleValueSheet(car: car) {
                     car.lastResalePromptDate = Date()
                     resaleDismissed = true
                 }
             }
+        }
+    }
+}
+
+// MARK: - Log Fuel FAB
+
+struct LogFuelFAB: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: "fuelpump.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                Text("Log Fill-Up")
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            .foregroundStyle(.black.opacity(0.85))
+            .padding(.horizontal, 28)
+            .padding(.vertical, 16)
+            .background(
+                Capsule()
+                    .fill(Color.ccAmber)
+                    .shadow(color: Color.ccAmber.opacity(0.5), radius: 16, x: 0, y: 6)
+            )
         }
     }
 }
@@ -246,7 +279,7 @@ struct AmortizationCard: View {
                 if let rate = calc.amortizationPerKm {
                     Text("\(formatCostPerKm(rate))/km")
                         .font(.caption.bold())
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Color.ccAmber)
                 }
             }
             HStack(spacing: 16) {
@@ -276,7 +309,7 @@ struct AmortizationCard: View {
                         .foregroundStyle(.white.opacity(0.5))
                     Text(formatEUR(max(0, car.purchasePrice - resaleValue)))
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.red.opacity(0.85))
+                        .foregroundStyle(Color.ccEmber)
                 }
             }
         }
@@ -295,7 +328,7 @@ struct ResalePromptBanner: View {
         HStack(spacing: 12) {
             Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
                 .font(.title2)
-                .foregroundStyle(.orange)
+                .foregroundStyle(Color.ccAmber)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Update resale value")
                     .font(.subheadline.bold())
@@ -323,7 +356,7 @@ struct ResalePromptBanner: View {
         .glassEffect(in: RoundedRectangle(cornerRadius: 16))
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(.orange.opacity(0.4), lineWidth: 1)
+                .stroke(Color.ccAmber.opacity(0.45), lineWidth: 1)
         )
     }
 }
@@ -493,5 +526,6 @@ struct AddResaleValueSheet: View {
                 Spacer()
             }
         }
+        .presentationBackground(ccBaseColor)
     }
 }

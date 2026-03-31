@@ -49,20 +49,58 @@ func dateRange(for period: Period, customStart: Date, customEnd: Date, carPurcha
     }
 }
 
+// MARK: - Design tokens
+
+extension Color {
+    /// Warm amber — primary accent (fuel, speed, energy)
+    static let ccAmber     = Color(red: 1.00, green: 0.52, blue: 0.08)
+    /// Electric teal — secondary accent (total cost, precision)
+    static let ccTeal      = Color(red: 0.00, green: 0.88, blue: 0.74)
+    /// Ember red — loss / amortization
+    static let ccEmber     = Color(red: 0.92, green: 0.22, blue: 0.12)
+    /// Mint green — efficiency / good metric
+    static let ccMint      = Color(red: 0.30, green: 0.95, blue: 0.55)
+    /// Warm cream — primary text on dark glass
+    static let ccCream     = Color(red: 1.00, green: 0.96, blue: 0.90)
+}
+
 // MARK: - App background
+
+/// The near-black base used for sheet presentation backgrounds (prevents white flash).
+let ccBaseColor = Color(red: 0.05, green: 0.04, blue: 0.06)
 
 struct AppBackground: View {
     var body: some View {
-        LinearGradient(
-            colors: [
-                Color(red: 0.04, green: 0.06, blue: 0.18),
-                Color(red: 0.08, green: 0.04, blue: 0.22),
-                Color(red: 0.04, green: 0.12, blue: 0.28)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
+        ZStack {
+            ccBaseColor.ignoresSafeArea()
+
+            // Amber glow — bottom-centre, main "headlight" light source
+            RadialGradient(
+                colors: [Color.ccAmber.opacity(0.55), .clear],
+                center: .init(x: 0.5, y: 1.1),
+                startRadius: 0,
+                endRadius: 560
+            )
+            .ignoresSafeArea()
+
+            // Teal accent — top-left edge, cool contrast
+            RadialGradient(
+                colors: [Color.ccTeal.opacity(0.32), .clear],
+                center: .init(x: -0.05, y: 0.1),
+                startRadius: 0,
+                endRadius: 420
+            )
+            .ignoresSafeArea()
+
+            // Ember — upper-right, subtle heat
+            RadialGradient(
+                colors: [Color.ccEmber.opacity(0.24), .clear],
+                center: .init(x: 1.1, y: 0.06),
+                startRadius: 0,
+                endRadius: 340
+            )
+            .ignoresSafeArea()
+        }
     }
 }
 

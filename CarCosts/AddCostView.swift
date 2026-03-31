@@ -31,7 +31,7 @@ struct AddCostView: View {
                     VStack(spacing: 6) {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 40))
-                            .foregroundStyle(.purple)
+                            .foregroundStyle(Color.ccTeal)
                         Text("Log Cost")
                             .font(.title2.bold())
                             .foregroundStyle(.white)
@@ -51,7 +51,7 @@ struct AddCostView: View {
                             }
                             Spacer()
                             Toggle("", isOn: $isRecurring)
-                                .tint(.purple)
+                                .tint(Color.ccTeal)
                         }
                         .padding(14)
                         .glassEffect(in: RoundedRectangle(cornerRadius: 14))
@@ -151,6 +151,7 @@ struct AddCostView: View {
                 }
             }
         }
+        .presentationBackground(ccBaseColor)
     }
 
     private func save() {
@@ -188,7 +189,7 @@ struct CategoryChip: View {
         .glassEffect(in: RoundedRectangle(cornerRadius: 8))
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(isSelected ? Color.purple.opacity(0.7) : Color.clear, lineWidth: 1)
+                .stroke(isSelected ? Color.ccTeal.opacity(0.7) : Color.clear, lineWidth: 1)
         )
     }
 }

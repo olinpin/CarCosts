@@ -186,7 +186,7 @@ struct FuelEntryRow: View {
         HStack(spacing: 12) {
             Image(systemName: "fuelpump.fill")
                 .font(.callout)
-                .foregroundStyle(.cyan.opacity(0.8))
+                .foregroundStyle(Color.ccAmber.opacity(0.85))
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 3) {
@@ -210,7 +210,7 @@ struct FuelEntryRow: View {
                     if let eff = efficiency {
                         Text(formatEfficiency(eff))
                             .font(.caption2)
-                            .foregroundStyle(.cyan.opacity(0.7))
+                            .foregroundStyle(Color.ccTeal.opacity(0.8))
                     }
                 }
             }
@@ -240,7 +240,7 @@ struct RecurringCostRow: View {
         HStack(spacing: 12) {
             Image(systemName: cost.category.systemImage)
                 .font(.callout)
-                .foregroundStyle(.purple.opacity(0.8))
+                .foregroundStyle(Color.ccTeal.opacity(0.85))
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 3) {
@@ -277,7 +277,7 @@ struct OtherCostRow: View {
         HStack(spacing: 12) {
             Image(systemName: cost.category.systemImage)
                 .font(.callout)
-                .foregroundStyle(.orange.opacity(0.8))
+                .foregroundStyle(Color.ccAmber.opacity(0.85))
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 3) {

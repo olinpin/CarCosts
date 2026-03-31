@@ -98,11 +98,11 @@ struct StatsView: View {
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 SummaryTile(label: "Total spent", value: formatEUR(total), color: .white)
-                SummaryTile(label: "Distance", value: formatKm(km), color: .cyan)
-                SummaryTile(label: "Fuel", value: formatEUR(fuel), color: .cyan)
-                SummaryTile(label: "Recurring", value: formatEUR(recurring), color: .purple)
-                SummaryTile(label: "Other costs", value: formatEUR(other), color: .orange)
-                SummaryTile(label: "Amortization", value: formatEUR(amort), color: .red)
+                SummaryTile(label: "Distance", value: formatKm(km), color: .ccTeal)
+                SummaryTile(label: "Fuel", value: formatEUR(fuel), color: .ccAmber)
+                SummaryTile(label: "Recurring", value: formatEUR(recurring), color: .ccTeal)
+                SummaryTile(label: "Other costs", value: formatEUR(other), color: .ccAmber)
+                SummaryTile(label: "Amortization", value: formatEUR(amort), color: .ccEmber)
             }
         }
         .padding(16)
@@ -131,7 +131,7 @@ struct StatsView: View {
                         y: .value("Cost", item.cost)
                     )
                     .foregroundStyle(
-                        LinearGradient(colors: [.cyan, .blue], startPoint: .bottom, endPoint: .top)
+                        LinearGradient(colors: [Color.ccAmber, Color(red: 1.0, green: 0.75, blue: 0.3)], startPoint: .bottom, endPoint: .top)
                     )
                     .cornerRadius(4)
                 }
@@ -185,13 +185,13 @@ struct StatsView: View {
                         x: .value("Date", item.date),
                         y: .value("L/100km", item.l100km)
                     )
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(Color.ccTeal)
                     .lineStyle(StrokeStyle(lineWidth: 2))
                     PointMark(
                         x: .value("Date", item.date),
                         y: .value("L/100km", item.l100km)
                     )
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(Color.ccTeal)
                     .symbolSize(30)
                 }
                 .chartXAxis {
@@ -229,7 +229,7 @@ struct StatsView: View {
 
     private var costBreakdownChart: some View {
         let breakdown = calc.costBreakdown(from: range.start, to: range.end)
-        let colors: [Color] = [.cyan, .red, .purple, .orange]
+        let colors: [Color] = [.ccAmber, .ccEmber, .ccTeal, Color(red: 0.3, green: 0.95, blue: 0.55)]
 
         return VStack(alignment: .leading, spacing: 12) {
             Text("Cost Breakdown")
