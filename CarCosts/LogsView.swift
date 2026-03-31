@@ -45,7 +45,8 @@ struct LogsView: View {
                         Spacer()
                         Button {
                             if logTab == .fuel { showFuelLog = true }
-                            else { showCostLog = true }
+                            else if logTab == .costs { showCostLog = true }
+                            else { showNewTrip = true }
                         } label: {
                             Image(systemName: "plus.circle.fill")
                                 .font(.title2)
@@ -258,33 +259,39 @@ struct LogsView: View {
         if sortedTrips.isEmpty {
             emptyState(icon: "map", message: "No trips yet — tap + to create one")
         } else {
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(sortedTrips, id: \.persistentModelID) { trip in
-                        NavigationLink(destination: TripDetailView(trip: trip)) {
-                            TripRow(trip: trip)
-                        }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                modelContext.delete(trip)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
+            List {
+                ForEach(sortedTrips, id: \.persistentModelID) { trip in
+                    NavigationLink(destination: TripDetailView(trip: trip)) {
+                        TripRow(trip: trip)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            modelContext.delete(trip)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
                         }
                     }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .listRowSeparatorTint(Color.white.opacity(0.10))
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.ccSurfaceStroke, lineWidth: 1)
-                )
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.ccSurface)
-                )
-                .padding(.horizontal)
-                .padding(.bottom, 100)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.ccSurfaceStroke, lineWidth: 1)
+            )
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.ccSurface)
+            )
+            .padding(.horizontal)
+            .scrollDisabled(true)
+            .frame(height: CGFloat(sortedTrips.count) * 58 + 2)
+            .padding(.bottom, 100)
         }
     }
 
