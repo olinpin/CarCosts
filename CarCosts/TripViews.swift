@@ -138,8 +138,8 @@ struct TripPickerSheet: View {
                 let trimmed = newTripName.trimmingCharacters(in: .whitespaces)
                 guard !trimmed.isEmpty else { return }
                 let trip = Trip(name: trimmed)
-                trip.car = car
                 modelContext.insert(trip)
+                car.trips.append(trip)
                 selectedTrip = trip
                 newTripName = ""
                 dismiss()
