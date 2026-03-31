@@ -25,7 +25,7 @@ struct StatsView: View {
                         // Header
                         Text("Stats")
                             .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.ccTextPrimary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal)
                             .padding(.top, 8)
@@ -43,16 +43,18 @@ struct StatsView: View {
                             if selectedPeriod == .custom {
                                 HStack(spacing: 12) {
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text("From").font(.caption2).foregroundStyle(.white.opacity(0.5))
+                                        Text("From").font(.caption2).foregroundStyle(Color.ccTextSecondary)
                                         DatePicker("", selection: $customStart, displayedComponents: .date)
                                             .datePickerStyle(.compact).labelsHidden().colorScheme(.dark)
-                                            .padding(8).glassEffect(in: RoundedRectangle(cornerRadius: 10))
+                                            .padding(8)
+                                            .ccCardSurface(cornerRadius: 10)
                                     }
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text("To").font(.caption2).foregroundStyle(.white.opacity(0.5))
+                                        Text("To").font(.caption2).foregroundStyle(Color.ccTextSecondary)
                                         DatePicker("", selection: $customEnd, in: customStart..., displayedComponents: .date)
                                             .datePickerStyle(.compact).labelsHidden().colorScheme(.dark)
-                                            .padding(8).glassEffect(in: RoundedRectangle(cornerRadius: 10))
+                                            .padding(8)
+                                            .ccCardSurface(cornerRadius: 10)
                                     }
                                     Spacer()
                                 }
@@ -94,7 +96,7 @@ struct StatsView: View {
         return VStack(alignment: .leading, spacing: 14) {
             Text("Summary")
                 .font(.headline)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.ccTextPrimary)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 SummaryTile(label: "Total spent", value: formatEUR(total), color: .white)
@@ -106,7 +108,7 @@ struct StatsView: View {
             }
         }
         .padding(16)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+        .ccCardSurface(cornerRadius: 20)
         .padding(.horizontal)
     }
 
@@ -119,10 +121,10 @@ struct StatsView: View {
         return VStack(alignment: .leading, spacing: 12) {
             Text("Monthly Fuel Cost")
                 .font(.headline)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.ccTextPrimary)
             Text("Last 12 months")
                 .font(.caption)
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(Color.ccTextSecondary)
 
             if hasData {
                 Chart(data, id: \.month) { item in
@@ -162,7 +164,7 @@ struct StatsView: View {
             }
         }
         .padding(16)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+        .ccCardSurface(cornerRadius: 20)
         .padding(.horizontal)
     }
 
@@ -174,10 +176,10 @@ struct StatsView: View {
         return VStack(alignment: .leading, spacing: 12) {
             Text("Fuel Efficiency")
                 .font(.headline)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.ccTextPrimary)
             Text("L/100km per fill-up")
                 .font(.caption)
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(Color.ccTextSecondary)
 
             if data.count >= 2 {
                 Chart(data, id: \.date) { item in
@@ -221,7 +223,7 @@ struct StatsView: View {
             }
         }
         .padding(16)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+        .ccCardSurface(cornerRadius: 20)
         .padding(.horizontal)
     }
 
@@ -234,7 +236,7 @@ struct StatsView: View {
         return VStack(alignment: .leading, spacing: 12) {
             Text("Cost Breakdown")
                 .font(.headline)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.ccTextPrimary)
 
             if !breakdown.isEmpty {
                 HStack(alignment: .center, spacing: 20) {
@@ -273,14 +275,14 @@ struct StatsView: View {
             }
         }
         .padding(16)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+        .ccCardSurface(cornerRadius: 20)
         .padding(.horizontal)
     }
 
     private func emptyChartPlaceholder(_ message: String) -> some View {
         Text(message)
             .font(.caption)
-            .foregroundStyle(.white.opacity(0.4))
+            .foregroundStyle(Color.ccTextSecondary)
             .frame(maxWidth: .infinity, minHeight: 80, alignment: .center)
     }
 }
@@ -296,7 +298,7 @@ struct SummaryTile: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
                 .font(.caption2)
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(Color.ccTextSecondary)
             Text(value)
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(color)
@@ -305,6 +307,6 @@ struct SummaryTile: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+        .ccCardSurface(cornerRadius: 12)
     }
 }

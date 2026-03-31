@@ -33,7 +33,7 @@ struct LogsView: View {
                     HStack {
                         Text("Logs")
                             .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.ccTextPrimary)
                         Spacer()
                         Button {
                             if logTab == .fuel { showFuelLog = true }
@@ -41,7 +41,7 @@ struct LogsView: View {
                         } label: {
                             Image(systemName: "plus.circle.fill")
                                 .font(.title2)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Color.ccTextPrimary)
                         }
                     }
                     .padding(.horizontal)
@@ -97,7 +97,7 @@ struct LogsView: View {
                     }
                 }
             }
-            .glassEffect(in: RoundedRectangle(cornerRadius: 18))
+            .ccCardSurface(cornerRadius: 18)
             .padding(.top, 4)
         }
     }
@@ -110,7 +110,7 @@ struct LogsView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Recurring")
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(Color.ccTextSecondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
 
@@ -121,7 +121,7 @@ struct LogsView: View {
                         }
                     }
                 }
-                .glassEffect(in: RoundedRectangle(cornerRadius: 18))
+                .ccCardSurface(cornerRadius: 18)
             }
 
             // One-time costs
@@ -129,7 +129,7 @@ struct LogsView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("One-time")
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(Color.ccTextSecondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
 
@@ -140,7 +140,7 @@ struct LogsView: View {
                         }
                     }
                 }
-                .glassEffect(in: RoundedRectangle(cornerRadius: 18))
+                .ccCardSurface(cornerRadius: 18)
             }
 
             if sortedRecurring.isEmpty && sortedCosts.isEmpty {
@@ -154,14 +154,14 @@ struct LogsView: View {
         VStack(spacing: 10) {
             Image(systemName: icon)
                 .font(.largeTitle)
-                .foregroundStyle(.white.opacity(0.25))
+                .foregroundStyle(Color.ccTextMuted)
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(Color.ccTextSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(40)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 18))
+        .ccCardSurface(cornerRadius: 18)
         .padding(.top, 4)
     }
 }
@@ -196,16 +196,16 @@ struct FuelEntryRow: View {
                         .foregroundStyle(.white)
                     Text("@ \(formatEUR(entry.pricePerLiter))/L")
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.6))
+                        .foregroundStyle(Color.ccTextSecondary)
                 }
                 HStack(spacing: 8) {
                     Text("\(Int(entry.odometerReading).formatted()) km")
                         .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.45))
+                        .foregroundStyle(Color.ccTextMuted)
                     if let km = kmDriven {
                         Text("+\(Int(km)) km")
                             .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.45))
+                            .foregroundStyle(Color.ccTextMuted)
                     }
                     if let eff = efficiency {
                         Text(formatEfficiency(eff))
@@ -223,7 +223,7 @@ struct FuelEntryRow: View {
                     .foregroundStyle(.white)
                 Text(entry.date.formatted(date: .abbreviated, time: .omitted))
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(Color.ccTextMuted)
             }
         }
         .padding(.vertical, 12)
@@ -249,7 +249,7 @@ struct RecurringCostRow: View {
                     .foregroundStyle(.white)
                 Text(cost.category.rawValue)
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.45))
+                    .foregroundStyle(Color.ccTextMuted)
             }
 
             Spacer()
@@ -260,7 +260,7 @@ struct RecurringCostRow: View {
                     .foregroundStyle(.white)
                 Text("from \(cost.startDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(Color.ccTextMuted)
             }
         }
         .padding(.vertical, 12)
@@ -287,11 +287,11 @@ struct OtherCostRow: View {
                 HStack(spacing: 6) {
                     Text(cost.category.rawValue)
                         .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.45))
+                        .foregroundStyle(Color.ccTextMuted)
                     if !cost.notes.isEmpty {
                         Text("· \(cost.notes)")
                             .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.35))
+                            .foregroundStyle(Color.ccTextSecondary)
                             .lineLimit(1)
                     }
                 }
@@ -305,7 +305,7 @@ struct OtherCostRow: View {
                     .foregroundStyle(.white)
                 Text(cost.date.formatted(date: .abbreviated, time: .omitted))
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(Color.ccTextMuted)
             }
         }
         .padding(.vertical, 12)

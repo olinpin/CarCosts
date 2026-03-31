@@ -29,10 +29,10 @@ struct OnboardingView: View {
                             .shadow(color: .white.opacity(0.3), radius: 20)
                         Text("CarCosts")
                             .font(.system(size: 36, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.ccTextPrimary)
                         Text("Know what your car truly costs per kilometre")
                             .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.65))
+                            .foregroundStyle(Color.ccTextSecondary)
                             .multilineTextAlignment(.center)
                     }
 
@@ -54,13 +54,13 @@ struct OnboardingView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Purchase date")
                                 .font(.caption)
-                                .foregroundStyle(.white.opacity(0.6))
+                                .foregroundStyle(Color.ccTextSecondary)
 
                             DatePicker("", selection: $purchaseDate, displayedComponents: .date)
                                 .datePickerStyle(.compact)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 10)
-                                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                                .ccCardSurface(cornerRadius: 12)
                                 .colorScheme(.dark)
                                 .labelsHidden()
                         }
@@ -71,10 +71,10 @@ struct OnboardingView: View {
                     Button(action: saveCar) {
                         Text("Get Started")
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.ccTextPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+                            .ccCardSurface(cornerRadius: 16)
                     }
                     .padding(.horizontal, 24)
                     .disabled(!canSave)

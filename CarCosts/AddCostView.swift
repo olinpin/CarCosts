@@ -34,7 +34,7 @@ struct AddCostView: View {
                             .foregroundStyle(Color.ccTeal)
                         Text("Log Cost")
                             .font(.title2.bold())
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.ccTextPrimary)
                     }
                     .padding(.top, 36)
 
@@ -44,17 +44,17 @@ struct AddCostView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Recurring cost")
                                     .font(.subheadline)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Color.ccTextPrimary)
                                 Text("Insurance, road tax, etc.")
                                     .font(.caption)
-                                    .foregroundStyle(.white.opacity(0.5))
+                                    .foregroundStyle(Color.ccTextSecondary)
                             }
                             Spacer()
                             Toggle("", isOn: $isRecurring)
                                 .tint(Color.ccTeal)
                         }
                         .padding(14)
-                        .glassEffect(in: RoundedRectangle(cornerRadius: 14))
+                        .ccCardSurface(cornerRadius: 14)
 
                         // Name
                         GlassInputField(title: "Name", text: $name, placeholder: isRecurring ? "e.g. Insurance" : "e.g. Tyre change")
@@ -63,7 +63,7 @@ struct AddCostView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Category")
                                 .font(.caption)
-                                .foregroundStyle(.white.opacity(0.6))
+                                .foregroundStyle(Color.ccTextSecondary)
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 8) {
                                     ForEach(CostCategory.allCases, id: \.self) { cat in
@@ -86,14 +86,14 @@ struct AddCostView: View {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("Start date")
                                     .font(.caption)
-                                    .foregroundStyle(.white.opacity(0.6))
+                                    .foregroundStyle(Color.ccTextSecondary)
                                 DatePicker("", selection: $date, displayedComponents: .date)
                                     .datePickerStyle(.compact)
                                     .labelsHidden()
                                     .colorScheme(.dark)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 10)
-                                    .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                                    .ccCardSurface(cornerRadius: 12)
                             }
                         } else {
                             GlassInputField(
@@ -106,26 +106,26 @@ struct AddCostView: View {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("Date")
                                     .font(.caption)
-                                    .foregroundStyle(.white.opacity(0.6))
+                                    .foregroundStyle(Color.ccTextSecondary)
                                 DatePicker("", selection: $date, displayedComponents: .date)
                                     .datePickerStyle(.compact)
                                     .labelsHidden()
                                     .colorScheme(.dark)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 10)
-                                    .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                                    .ccCardSurface(cornerRadius: 12)
                             }
 
                             // Notes
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("Notes (optional)")
                                     .font(.caption)
-                                    .foregroundStyle(.white.opacity(0.6))
+                                    .foregroundStyle(Color.ccTextSecondary)
                                 TextField("e.g. Replaced front tyres", text: $notes)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 12)
-                                    .glassEffect(in: RoundedRectangle(cornerRadius: 12))
-                                    .foregroundStyle(.white)
+                                    .ccCardSurface(cornerRadius: 12)
+                                    .foregroundStyle(Color.ccTextPrimary)
                             }
                         }
                     }
@@ -135,14 +135,14 @@ struct AddCostView: View {
                         Button("Cancel") { dismiss() }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .glassEffect(in: RoundedRectangle(cornerRadius: 14))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .ccCardSurface(cornerRadius: 14)
+                            .foregroundStyle(Color.ccTextSecondary)
 
                         Button("Save") { save() }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .glassEffect(in: RoundedRectangle(cornerRadius: 14))
-                            .foregroundStyle(.white)
+                            .ccCardSurface(cornerRadius: 14)
+                            .foregroundStyle(Color.ccTextPrimary)
                             .disabled(!canSave)
                             .opacity(canSave ? 1 : 0.4)
                     }
@@ -183,10 +183,10 @@ struct CategoryChip: View {
             Text(category.rawValue)
                 .font(.caption)
         }
-        .foregroundStyle(isSelected ? .white : .white.opacity(0.5))
+        .foregroundStyle(isSelected ? Color.ccTextPrimary : Color.ccTextSecondary)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 8))
+        .ccCardSurface(cornerRadius: 8)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
                 .stroke(isSelected ? Color.ccTeal.opacity(0.7) : Color.clear, lineWidth: 1)

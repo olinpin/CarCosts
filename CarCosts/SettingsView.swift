@@ -19,7 +19,7 @@ struct SettingsView: View {
                         // Header
                         Text("Settings")
                             .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.ccTextPrimary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal)
                             .padding(.top, 8)
@@ -58,11 +58,11 @@ struct SettingsView: View {
             HStack {
                 Text("Car")
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.ccTextPrimary)
                 Spacer()
                 Button("Edit") { showEditCar = true }
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(Color.ccTextSecondary)
             }
 
             VStack(spacing: 0) {
@@ -84,7 +84,7 @@ struct SettingsView: View {
                     SettingsRow(label: "Amortization rate", value: "\(formatCostPerKm(amort))/km")
                 }
             }
-            .glassEffect(in: RoundedRectangle(cornerRadius: 18))
+            .ccCardSurface(cornerRadius: 18)
         }
         .padding(.horizontal)
     }
@@ -95,14 +95,14 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Resale Value Reminder")
                 .font(.headline)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.ccTextPrimary)
 
             VStack(spacing: 0) {
                 ForEach(PromptSchedule.allCases, id: \.self) { schedule in
                     HStack {
                         Text(schedule.rawValue)
                             .font(.subheadline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.ccTextPrimary)
                         Spacer()
                         if car.promptSchedule == schedule {
                             Image(systemName: "checkmark.circle.fill")
@@ -120,7 +120,7 @@ struct SettingsView: View {
                     }
                 }
             }
-            .glassEffect(in: RoundedRectangle(cornerRadius: 18))
+            .ccCardSurface(cornerRadius: 18)
         }
         .padding(.horizontal)
     }
@@ -134,23 +134,23 @@ struct SettingsView: View {
             HStack {
                 Text("Resale Value History")
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.ccTextPrimary)
                 Spacer()
                 Button {
                     showAddResale = true
                 } label: {
                     Image(systemName: "plus.circle.fill")
-                        .foregroundStyle(.white.opacity(0.7))
+                        .foregroundStyle(Color.ccTextSecondary)
                 }
             }
 
             if sorted.isEmpty {
                 Text("No resale values recorded yet — add one to enable amortization tracking")
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.45))
+                    .foregroundStyle(Color.ccTextSecondary)
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .glassEffect(in: RoundedRectangle(cornerRadius: 18))
+                    .ccCardSurface(cornerRadius: 18)
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(sorted.enumerated()), id: \.element.persistentModelID) { idx, entry in
@@ -158,10 +158,10 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(formatEUR(entry.value))
                                     .font(.subheadline.bold())
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Color.ccTextPrimary)
                                 Text(entry.date.formatted(date: .long, time: .omitted))
                                     .font(.caption2)
-                                    .foregroundStyle(.white.opacity(0.45))
+                                    .foregroundStyle(Color.ccTextMuted)
                             }
                             Spacer()
                             if idx == 0 {
@@ -169,7 +169,14 @@ struct SettingsView: View {
                                     .font(.caption2)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
-                                    .glassEffect(in: RoundedRectangle(cornerRadius: 6))
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .fill(Color.ccSurface)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .stroke(Color.ccTeal.opacity(0.35), lineWidth: 1)
+                                    )
                                     .foregroundStyle(Color.ccTeal)
                             }
                         }
@@ -188,7 +195,7 @@ struct SettingsView: View {
                         }
                     }
                 }
-                .glassEffect(in: RoundedRectangle(cornerRadius: 18))
+                .ccCardSurface(cornerRadius: 18)
             }
         }
         .padding(.horizontal)
@@ -203,23 +210,23 @@ struct SettingsView: View {
             HStack {
                 Text("Recurring Costs")
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.ccTextPrimary)
                 Spacer()
                 NavigationLink {
                     AddCostViewWrapper(car: car, isRecurring: true)
                 } label: {
                     Image(systemName: "plus.circle.fill")
-                        .foregroundStyle(.white.opacity(0.7))
+                        .foregroundStyle(Color.ccTextSecondary)
                 }
             }
 
             if sorted.isEmpty {
                 Text("No recurring costs yet — add insurance, road tax, etc.")
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.45))
+                    .foregroundStyle(Color.ccTextSecondary)
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .glassEffect(in: RoundedRectangle(cornerRadius: 18))
+                    .ccCardSurface(cornerRadius: 18)
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(sorted.enumerated()), id: \.element.persistentModelID) { idx, cost in
@@ -231,15 +238,15 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(cost.name)
                                     .font(.subheadline.bold())
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Color.ccTextPrimary)
                                 Text(cost.category.rawValue + " · from \(cost.startDate.formatted(date: .abbreviated, time: .omitted))")
                                     .font(.caption2)
-                                    .foregroundStyle(.white.opacity(0.45))
+                                    .foregroundStyle(Color.ccTextMuted)
                             }
                             Spacer()
                             Text("\(formatEUR(cost.monthlyAmount))/mo")
                                 .font(.subheadline.bold())
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Color.ccTextPrimary)
                         }
                         .padding(.vertical, 12)
                         .padding(.horizontal, 16)
@@ -255,7 +262,7 @@ struct SettingsView: View {
                         }
                     }
                 }
-                .glassEffect(in: RoundedRectangle(cornerRadius: 18))
+                .ccCardSurface(cornerRadius: 18)
             }
         }
         .padding(.horizontal)
@@ -272,11 +279,11 @@ struct SettingsRow: View {
         HStack {
             Text(label)
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(Color.ccTextSecondary)
             Spacer()
             Text(value)
                 .font(.subheadline)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.ccTextPrimary)
                 .multilineTextAlignment(.trailing)
         }
         .padding(.vertical, 13)
@@ -308,7 +315,7 @@ struct EditCarSheet: View {
             VStack(spacing: 24) {
                 Text("Edit Car")
                     .font(.title2.bold())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.ccTextPrimary)
                     .padding(.top, 40)
 
                 VStack(spacing: 14) {
@@ -318,14 +325,14 @@ struct EditCarSheet: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Purchase date")
                             .font(.caption)
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(Color.ccTextSecondary)
                         DatePicker("", selection: $purchaseDate, displayedComponents: .date)
                             .datePickerStyle(.compact)
                             .labelsHidden()
                             .colorScheme(.dark)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
-                            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                            .ccCardSurface(cornerRadius: 12)
                     }
                 }
                 .padding(.horizontal, 24)
@@ -333,8 +340,8 @@ struct EditCarSheet: View {
                 HStack(spacing: 12) {
                     Button("Cancel") { dismiss() }
                         .frame(maxWidth: .infinity).padding(.vertical, 14)
-                        .glassEffect(in: RoundedRectangle(cornerRadius: 14))
-                        .foregroundStyle(.white.opacity(0.7))
+                        .ccCardSurface(cornerRadius: 14)
+                        .foregroundStyle(Color.ccTextSecondary)
 
                     Button("Save") {
                         car.name = name.trimmingCharacters(in: .whitespaces)
@@ -345,8 +352,8 @@ struct EditCarSheet: View {
                         dismiss()
                     }
                     .frame(maxWidth: .infinity).padding(.vertical, 14)
-                    .glassEffect(in: RoundedRectangle(cornerRadius: 14))
-                    .foregroundStyle(.white)
+                    .ccCardSurface(cornerRadius: 14)
+                    .foregroundStyle(Color.ccTextPrimary)
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
                     .opacity(name.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1)
                 }

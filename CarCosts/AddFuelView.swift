@@ -42,7 +42,7 @@ struct AddFuelView: View {
                             .foregroundStyle(Color.ccAmber)
                         Text("Log Fill-Up")
                             .font(.title2.bold())
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.ccTextPrimary)
                     }
                     .padding(.top, 36)
 
@@ -51,14 +51,14 @@ struct AddFuelView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Date")
                                 .font(.caption)
-                                .foregroundStyle(.white.opacity(0.6))
+                                .foregroundStyle(Color.ccTextSecondary)
                             DatePicker("", selection: $date, displayedComponents: .date)
                                 .datePickerStyle(.compact)
                                 .labelsHidden()
                                 .colorScheme(.dark)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 10)
-                                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                                .ccCardSurface(cornerRadius: 12)
                         }
 
                         // Odometer
@@ -75,7 +75,7 @@ struct AddFuelView: View {
 
                         Text("Enter any two — the third is calculated automatically")
                             .font(.caption)
-                            .foregroundStyle(.white.opacity(0.5))
+                            .foregroundStyle(Color.ccTextSecondary)
                             .frame(maxWidth: .infinity, alignment: .center)
 
                         // Fuel trio
@@ -109,14 +109,14 @@ struct AddFuelView: View {
                         Button("Cancel") { dismiss() }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .glassEffect(in: RoundedRectangle(cornerRadius: 14))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .ccCardSurface(cornerRadius: 14)
+                            .foregroundStyle(Color.ccTextSecondary)
 
                         Button("Save") { saveFuel() }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .glassEffect(in: RoundedRectangle(cornerRadius: 14))
-                            .foregroundStyle(.white)
+                            .ccCardSurface(cornerRadius: 14)
+                            .foregroundStyle(Color.ccTextPrimary)
                             .disabled(!canSave)
                             .opacity(canSave ? 1 : 0.4)
                     }
@@ -179,7 +179,7 @@ struct FuelFieldRow: View {
             HStack {
                 Text(title)
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(Color.ccTextSecondary)
                 if isLocked {
                     Spacer()
                     Text("calculated")
@@ -191,8 +191,8 @@ struct FuelFieldRow: View {
                 .keyboardType(.decimalPad)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
-                .foregroundStyle(isLocked ? .white.opacity(0.55) : .white)
+                .ccCardSurface(cornerRadius: 12)
+                .foregroundStyle(isLocked ? Color.ccTextSecondary : Color.ccTextPrimary)
                 .disabled(false)
         }
     }

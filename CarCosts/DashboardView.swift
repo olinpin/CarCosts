@@ -39,17 +39,17 @@ struct DashboardView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(car.name)
                                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Color.ccTextPrimary)
                                 if let odometer = car.latestOdometer {
                                     Text("\(Int(odometer).formatted()) km on clock")
                                         .font(.caption)
-                                        .foregroundStyle(.white.opacity(0.6))
+                                        .foregroundStyle(Color.ccTextSecondary)
                                 }
                             }
                             Spacer()
                             Image(systemName: "car.fill")
                                 .font(.system(size: 28))
-                                .foregroundStyle(.white.opacity(0.3))
+                                .foregroundStyle(Color.ccTextMuted)
                         }
                         .padding(.horizontal)
                         .padding(.top, 8)
@@ -69,26 +69,26 @@ struct DashboardView: View {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("From")
                                             .font(.caption2)
-                                            .foregroundStyle(.white.opacity(0.6))
+                                            .foregroundStyle(Color.ccTextSecondary)
                                         DatePicker("", selection: $customStart, displayedComponents: .date)
                                             .datePickerStyle(.compact)
                                             .labelsHidden()
                                             .colorScheme(.dark)
                                             .padding(.horizontal, 10)
                                             .padding(.vertical, 8)
-                                            .glassEffect(in: RoundedRectangle(cornerRadius: 10))
+                                            .ccCardSurface(cornerRadius: 10)
                                     }
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("To")
                                             .font(.caption2)
-                                            .foregroundStyle(.white.opacity(0.6))
+                                            .foregroundStyle(Color.ccTextSecondary)
                                         DatePicker("", selection: $customEnd, in: customStart..., displayedComponents: .date)
                                             .datePickerStyle(.compact)
                                             .labelsHidden()
                                             .colorScheme(.dark)
                                             .padding(.horizontal, 10)
                                             .padding(.vertical, 8)
-                                            .glassEffect(in: RoundedRectangle(cornerRadius: 10))
+                                            .ccCardSurface(cornerRadius: 10)
                                     }
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -209,29 +209,29 @@ struct MetricCard: View {
                     .foregroundStyle(accentColor)
                 Text(title)
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(Color.ccTextSecondary)
             }
             if let v = value {
                 Text(v)
                     .font(.system(size: 26, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.ccTextPrimary)
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
                 Text(subtitle)
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.45))
+                    .foregroundStyle(Color.ccTextMuted)
             } else {
                 Text("--")
                     .font(.system(size: 26, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.25))
+                    .foregroundStyle(Color.ccTextMuted)
                 Text("add data")
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.3))
+                    .foregroundStyle(Color.ccTextMuted)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+        .ccCardSurface(cornerRadius: 20)
     }
 }
 
@@ -246,19 +246,19 @@ struct StatBadge: View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.caption)
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(Color.ccTextSecondary)
             Text(value)
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.ccTextPrimary)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
             Text(label)
                 .font(.system(size: 10))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(Color.ccTextSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 14))
+        .ccCardSurface(cornerRadius: 14)
     }
 }
 
@@ -274,7 +274,7 @@ struct AmortizationCard: View {
             HStack {
                 Label("Amortization", systemImage: "arrow.down.circle.fill")
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(Color.ccTextSecondary)
                 Spacer()
                 if let rate = calc.amortizationPerKm {
                     Text("\(formatCostPerKm(rate))/km")
@@ -286,27 +286,27 @@ struct AmortizationCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Paid")
                         .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(Color.ccTextMuted)
                     Text(formatEUR(car.purchasePrice))
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.ccTextPrimary)
                 }
                 Image(systemName: "arrow.right")
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.3))
+                    .foregroundStyle(Color.ccTextMuted)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Current value")
                         .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(Color.ccTextMuted)
                     Text(formatEUR(resaleValue))
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.ccTextPrimary)
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("Lost value")
                         .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(Color.ccTextMuted)
                     Text(formatEUR(max(0, car.purchasePrice - resaleValue)))
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(Color.ccEmber)
@@ -314,7 +314,7 @@ struct AmortizationCard: View {
             }
         }
         .padding(16)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+        .ccCardSurface(cornerRadius: 16)
     }
 }
 
@@ -332,10 +332,10 @@ struct ResalePromptBanner: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Update resale value")
                     .font(.subheadline.bold())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.ccTextPrimary)
                 Text("Keep your amortization accurate")
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(Color.ccTextSecondary)
             }
             Spacer()
             Button(action: onUpdate) {
@@ -343,17 +343,17 @@ struct ResalePromptBanner: View {
                     .font(.caption.bold())
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .glassEffect(in: RoundedRectangle(cornerRadius: 8))
-                    .foregroundStyle(.white)
+                    .ccCardSurface(cornerRadius: 8)
+                    .foregroundStyle(Color.ccTextPrimary)
             }
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(Color.ccTextSecondary)
             }
         }
         .padding(14)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+        .ccCardSurface(cornerRadius: 16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.ccAmber.opacity(0.45), lineWidth: 1)
@@ -386,45 +386,45 @@ struct RecentActivitySection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent Activity")
                 .font(.headline)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.ccTextPrimary)
 
             if recentEntries.isEmpty {
                 VStack(spacing: 8) {
                     Image(systemName: "plus.circle.dashed")
                         .font(.title)
-                        .foregroundStyle(.white.opacity(0.3))
+                        .foregroundStyle(Color.ccTextMuted)
                     Text("No entries yet — log your first fill-up")
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(Color.ccTextSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(24)
-                .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+                .ccCardSurface(cornerRadius: 16)
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(recentEntries.enumerated()), id: \.offset) { idx, entry in
                         HStack(spacing: 12) {
                             Image(systemName: entry.icon)
                                 .font(.caption)
-                                .foregroundStyle(.white.opacity(0.6))
+                                .foregroundStyle(Color.ccTextSecondary)
                                 .frame(width: 24)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(entry.title)
                                     .font(.subheadline)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Color.ccTextPrimary)
                                 Text(entry.subtitle)
                                     .font(.caption2)
-                                    .foregroundStyle(.white.opacity(0.5))
+                                    .foregroundStyle(Color.ccTextSecondary)
                             }
                             Spacer()
                             VStack(alignment: .trailing, spacing: 2) {
                                 Text(entry.amount)
                                     .font(.subheadline.bold())
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Color.ccTextPrimary)
                                 Text(entry.date.formatted(date: .abbreviated, time: .omitted))
                                     .font(.caption2)
-                                    .foregroundStyle(.white.opacity(0.4))
+                                    .foregroundStyle(Color.ccTextMuted)
                             }
                         }
                         .padding(.vertical, 12)
@@ -436,7 +436,7 @@ struct RecentActivitySection: View {
                         }
                     }
                 }
-                .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+                .ccCardSurface(cornerRadius: 16)
             }
         }
     }
@@ -468,10 +468,10 @@ struct AddResaleValueSheet: View {
                         .foregroundStyle(.orange)
                     Text("Current Resale Value")
                         .font(.title2.bold())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.ccTextPrimary)
                     Text("What could you sell your car for today?")
                         .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.6))
+                        .foregroundStyle(Color.ccTextSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.top, 40)
@@ -482,14 +482,14 @@ struct AddResaleValueSheet: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Date")
                             .font(.caption)
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(Color.ccTextSecondary)
                         DatePicker("", selection: $date, displayedComponents: .date)
                             .datePickerStyle(.compact)
                             .labelsHidden()
                             .colorScheme(.dark)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
-                            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                            .ccCardSurface(cornerRadius: 12)
                     }
                 }
                 .padding(.horizontal, 24)
@@ -502,8 +502,8 @@ struct AddResaleValueSheet: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .glassEffect(in: RoundedRectangle(cornerRadius: 14))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .ccCardSurface(cornerRadius: 14)
+                    .foregroundStyle(Color.ccTextSecondary)
 
                     Button("Save") {
                         guard let value = Double(valueText.replacingOccurrences(of: ",", with: ".")) else { return }
@@ -516,8 +516,8 @@ struct AddResaleValueSheet: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .glassEffect(in: RoundedRectangle(cornerRadius: 14))
-                    .foregroundStyle(.white)
+                    .ccCardSurface(cornerRadius: 14)
+                    .foregroundStyle(Color.ccTextPrimary)
                     .disabled(!canSave)
                     .opacity(canSave ? 1 : 0.4)
                 }

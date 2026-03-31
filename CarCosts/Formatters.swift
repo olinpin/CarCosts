@@ -62,6 +62,16 @@ extension Color {
     static let ccMint      = Color(red: 0.30, green: 0.95, blue: 0.55)
     /// Warm cream — primary text on dark glass
     static let ccCream     = Color(red: 1.00, green: 0.96, blue: 0.90)
+    /// Readable primary text color across the app
+    static let ccTextPrimary = Color.ccCream
+    /// Secondary text with enough contrast on translucent surfaces
+    static let ccTextSecondary = Color(red: 0.86, green: 0.88, blue: 0.92)
+    /// Muted supporting copy
+    static let ccTextMuted = Color(red: 0.67, green: 0.71, blue: 0.78)
+    /// Shared darker surface to keep glass cards legible
+    static let ccSurface = Color(red: 0.10, green: 0.11, blue: 0.15).opacity(0.72)
+    /// Subtle border to separate panels from the background glow
+    static let ccSurfaceStroke = Color.white.opacity(0.10)
 }
 
 // MARK: - App background
@@ -104,6 +114,30 @@ struct AppBackground: View {
     }
 }
 
+// MARK: - Surface styling
+
+struct CardSurface: ViewModifier {
+    var cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(Color.ccSurface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(Color.ccSurfaceStroke, lineWidth: 1)
+            )
+    }
+}
+
+extension View {
+    func ccCardSurface(cornerRadius: CGFloat) -> some View {
+        modifier(CardSurface(cornerRadius: cornerRadius))
+    }
+}
+
 // MARK: - Glass input field
 
 struct GlassInputField: View {
@@ -116,13 +150,13 @@ struct GlassInputField: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.caption)
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(Color.ccTextSecondary)
             TextField(placeholder, text: $text)
                 .keyboardType(keyboardType)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
-                .foregroundStyle(.white)
+                .ccCardSurface(cornerRadius: 12)
+                .foregroundStyle(Color.ccTextPrimary)
         }
     }
 }
