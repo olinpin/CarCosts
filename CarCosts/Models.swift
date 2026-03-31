@@ -91,14 +91,16 @@ final class FuelEntry {
     var totalCost: Double
     var pricePerLiter: Double
     var odometerReading: Double
+    var filledToFull: Bool = true
     var car: Car?
 
-    init(date: Date, liters: Double, totalCost: Double, pricePerLiter: Double, odometerReading: Double) {
+    init(date: Date, liters: Double, totalCost: Double, pricePerLiter: Double, odometerReading: Double, filledToFull: Bool = true) {
         self.date = date
         self.liters = liters
         self.totalCost = totalCost
         self.pricePerLiter = pricePerLiter
         self.odometerReading = odometerReading
+        self.filledToFull = filledToFull
     }
 }
 

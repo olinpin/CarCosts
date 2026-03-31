@@ -19,7 +19,8 @@ struct CarCostsApp: App {
             ])
             // To enable iCloud sync: add CloudKit capability, then use
             // ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
-            container = try ModelContainer(for: schema)
+            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+            container = try ModelContainer(for: schema, migrationPlan: CarCostsMigrationPlan.self, configurations: config)
             configureTabBarAppearance()
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")

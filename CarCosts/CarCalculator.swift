@@ -23,25 +23,46 @@ struct CarCalculator {
 
     // MARK: - Period helpers
 
-    // Each fill-up entry (except the first ever) represents a trip from the previous odometer to this one.
-    // km and liters are attributed to the date of the later fill-up.
+    // Uses the full-tank method: only measure km/liters over spans between two consecutive
+    // "filledToFull" entries. Partial fill-ups in between contribute their liters but the
+    // segment boundaries are anchored to full-tank entries so efficiency stays accurate.
     private func tripData(from start: Date, to end: Date) -> (km: Double, liters: Double) {
         let entries = sortedFuelEntries
         var km = 0.0, liters = 0.0
+
+        // Find the index of the last full-tank entry strictly before `start`, which acts as
+        // the anchor odometer for the first segment that falls inside the window.
+        var segmentStartIndex: Int? = nil
         for (index, entry) in entries.enumerated() {
-            guard entry.date >= start && entry.date <= end else { continue }
-
-            let previousOdometer: Double?
-            if index == 0 {
-                previousOdometer = odometerBaseline
-            } else {
-                previousOdometer = entries[index - 1].odometerReading
+            if entry.date < start && entry.filledToFull {
+                segmentStartIndex = index
             }
-
-            guard let previousOdometer else { continue }
-            km += max(0, entry.odometerReading - previousOdometer)
-            liters += entry.liters
         }
+
+        // Walk forward through entries that end inside [start, end].
+        // A segment closes when we hit a filledToFull entry; accumulate liters for every
+        // entry in the segment, and km from the segment-open odometer to the close odometer.
+        var pendingLiters = 0.0
+        var segmentOpenOdometer: Double? = segmentStartIndex.map { entries[$0].odometerReading }
+            ?? odometerBaseline
+
+        for (index, entry) in entries.enumerated() {
+            // Skip entries before our anchor
+            if let anchor = segmentStartIndex, index <= anchor { continue }
+
+            pendingLiters += entry.liters
+
+            if entry.filledToFull {
+                // Segment closes here
+                if entry.date >= start && entry.date <= end, let openOdo = segmentOpenOdometer {
+                    km += max(0, entry.odometerReading - openOdo)
+                    liters += pendingLiters
+                }
+                pendingLiters = 0.0
+                segmentOpenOdometer = entry.odometerReading
+            }
+        }
+
         return (km, liters)
     }
 
@@ -133,23 +154,33 @@ struct CarCalculator {
         return Array(result.reversed())
     }
 
-    // Per-trip efficiency for line chart
+    // Per-segment efficiency for line chart, using the full-tank method.
+    // Each data point spans from one full-tank fill-up to the next, accumulating
+    // liters from any partial fill-ups in between.
     var tripEfficiencies: [(date: Date, l100km: Double)] {
         let entries = sortedFuelEntries
         var result: [(Date, Double)] = []
-        for (index, entry) in entries.enumerated() {
-            let previousOdometer: Double?
-            if index == 0 {
-                previousOdometer = odometerBaseline
-            } else {
-                previousOdometer = entries[index - 1].odometerReading
+        var segmentOpenOdometer: Double? = odometerBaseline
+        var pendingLiters = 0.0
+
+        for entry in entries {
+            pendingLiters += entry.liters
+
+            guard entry.filledToFull else { continue }
+            guard let openOdo = segmentOpenOdometer else {
+                segmentOpenOdometer = entry.odometerReading
+                pendingLiters = 0.0
+                continue
             }
 
-            guard let previousOdometer else { continue }
-            let km = max(0, entry.odometerReading - previousOdometer)
-            guard km > 0 else { continue }
-            result.append((entry.date, (entry.liters / km) * 100))
+            let km = max(0, entry.odometerReading - openOdo)
+            if km > 0 {
+                result.append((entry.date, (pendingLiters / km) * 100))
+            }
+            segmentOpenOdometer = entry.odometerReading
+            pendingLiters = 0.0
         }
+
         return result
     }
 

@@ -12,6 +12,7 @@ struct AddFuelView: View {
     @State private var totalCostText = ""
     @State private var pricePerLiterText = ""
     @State private var odometerText = ""
+    @State private var filledToFull = true
     @State private var calculatedField: FuelField?
     @State private var isApplyingCalculatedValue = false
     @State private var userEditedFields: Set<FuelField> = []
@@ -103,6 +104,20 @@ struct AddFuelView: View {
                             placeholder: "e.g. 1.599"
                         )
                         .onChange(of: pricePerLiterText) { _, _ in handleUserChange(to: .ppl) }
+
+                        Divider()
+                            .background(.white.opacity(0.15))
+                            .padding(.vertical, 4)
+
+                        Toggle(isOn: $filledToFull) {
+                            Text("Filled to full")
+                                .font(.subheadline)
+                                .foregroundStyle(Color.ccTextPrimary)
+                        }
+                        .tint(Color.ccAmber)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .ccCardSurface(cornerRadius: 12)
                     }
                     .padding(.horizontal, 24)
 
@@ -138,6 +153,7 @@ struct AddFuelView: View {
             pricePerLiterText = String(format: "%.4f", entryToEdit.pricePerLiter)
             odometerText = formatOdometer(entryToEdit.odometerReading)
             date = entryToEdit.date
+            filledToFull = entryToEdit.filledToFull
             userEditedFields = [.liters, .total, .ppl]
         }
     }
@@ -281,8 +297,9 @@ struct AddFuelView: View {
             entryToEdit.totalCost = total
             entryToEdit.pricePerLiter = ppl
             entryToEdit.odometerReading = odometer
+            entryToEdit.filledToFull = filledToFull
         } else {
-            let entry = FuelEntry(date: date, liters: liters, totalCost: total, pricePerLiter: ppl, odometerReading: odometer)
+            let entry = FuelEntry(date: date, liters: liters, totalCost: total, pricePerLiter: ppl, odometerReading: odometer, filledToFull: filledToFull)
             entry.car = car
             modelContext.insert(entry)
         }
