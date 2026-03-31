@@ -1,21 +1,31 @@
-//
-//  CarCostsApp.swift
-//  CarCosts
-//
-//  Created by Oliver Hnát on 31.03.2026.
-//
-
 import SwiftUI
-import CoreData
+import SwiftData
 
 @main
 struct CarCostsApp: App {
-    let persistenceController = PersistenceController.shared
+    let container: ModelContainer
+
+    init() {
+        do {
+            let schema = Schema([
+                Car.self,
+                FuelEntry.self,
+                ResaleValueEntry.self,
+                RecurringCost.self,
+                OtherCost.self
+            ])
+            // To enable iCloud sync: add CloudKit capability, then use
+            // ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
+            container = try ModelContainer(for: schema)
+        } catch {
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
+        .modelContainer(container)
     }
 }

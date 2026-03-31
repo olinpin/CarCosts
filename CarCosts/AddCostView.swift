@@ -1,0 +1,194 @@
+import SwiftUI
+import SwiftData
+
+struct AddCostView: View {
+    let car: Car
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var name = ""
+    @State private var amountText = ""
+    @State private var date = Date()
+    @State private var category: CostCategory = .maintenance
+    @State private var notes = ""
+    @State private var isRecurring = false
+    @State private var monthlyAmountText = ""
+
+    private var canSave: Bool {
+        let nameOK = !name.trimmingCharacters(in: .whitespaces).isEmpty
+        if isRecurring {
+            return nameOK && Double(monthlyAmountText.replacingOccurrences(of: ",", with: ".")) != nil
+        }
+        return nameOK && Double(amountText.replacingOccurrences(of: ",", with: ".")) != nil
+    }
+
+    var body: some View {
+        ZStack {
+            AppBackground()
+
+            ScrollView {
+                VStack(spacing: 24) {
+                    VStack(spacing: 6) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 40))
+                            .foregroundStyle(.purple)
+                        Text("Log Cost")
+                            .font(.title2.bold())
+                            .foregroundStyle(.white)
+                    }
+                    .padding(.top, 36)
+
+                    VStack(spacing: 14) {
+                        // Recurring toggle
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Recurring cost")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.white)
+                                Text("Insurance, road tax, etc.")
+                                    .font(.caption)
+                                    .foregroundStyle(.white.opacity(0.5))
+                            }
+                            Spacer()
+                            Toggle("", isOn: $isRecurring)
+                                .tint(.purple)
+                        }
+                        .padding(14)
+                        .glassEffect(in: RoundedRectangle(cornerRadius: 14))
+
+                        // Name
+                        GlassInputField(title: "Name", text: $name, placeholder: isRecurring ? "e.g. Insurance" : "e.g. Tyre change")
+
+                        // Category picker
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Category")
+                                .font(.caption)
+                                .foregroundStyle(.white.opacity(0.6))
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(CostCategory.allCases, id: \.self) { cat in
+                                        CategoryChip(category: cat, isSelected: category == cat)
+                                            .onTapGesture { category = cat }
+                                    }
+                                }
+                                .padding(.horizontal, 2)
+                            }
+                        }
+
+                        if isRecurring {
+                            GlassInputField(
+                                title: "Monthly amount (EUR)",
+                                text: $monthlyAmountText,
+                                placeholder: "e.g. 85",
+                                keyboardType: .decimalPad
+                            )
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Start date")
+                                    .font(.caption)
+                                    .foregroundStyle(.white.opacity(0.6))
+                                DatePicker("", selection: $date, displayedComponents: .date)
+                                    .datePickerStyle(.compact)
+                                    .labelsHidden()
+                                    .colorScheme(.dark)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 10)
+                                    .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                            }
+                        } else {
+                            GlassInputField(
+                                title: "Amount (EUR)",
+                                text: $amountText,
+                                placeholder: "e.g. 320",
+                                keyboardType: .decimalPad
+                            )
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Date")
+                                    .font(.caption)
+                                    .foregroundStyle(.white.opacity(0.6))
+                                DatePicker("", selection: $date, displayedComponents: .date)
+                                    .datePickerStyle(.compact)
+                                    .labelsHidden()
+                                    .colorScheme(.dark)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 10)
+                                    .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                            }
+
+                            // Notes
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Notes (optional)")
+                                    .font(.caption)
+                                    .foregroundStyle(.white.opacity(0.6))
+                                TextField("e.g. Replaced front tyres", text: $notes)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 12)
+                                    .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 24)
+
+                    HStack(spacing: 12) {
+                        Button("Cancel") { dismiss() }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .glassEffect(in: RoundedRectangle(cornerRadius: 14))
+                            .foregroundStyle(.white.opacity(0.7))
+
+                        Button("Save") { save() }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .glassEffect(in: RoundedRectangle(cornerRadius: 14))
+                            .foregroundStyle(.white)
+                            .disabled(!canSave)
+                            .opacity(canSave ? 1 : 0.4)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 40)
+                }
+            }
+        }
+    }
+
+    private func save() {
+        if isRecurring {
+            guard let monthly = Double(monthlyAmountText.replacingOccurrences(of: ",", with: ".")),
+                  !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+            let cost = RecurringCost(name: name.trimmingCharacters(in: .whitespaces), monthlyAmount: monthly, startDate: date, category: category)
+            cost.car = car
+            modelContext.insert(cost)
+        } else {
+            guard let amount = Double(amountText.replacingOccurrences(of: ",", with: ".")),
+                  !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+            let cost = OtherCost(name: name.trimmingCharacters(in: .whitespaces), amount: amount, date: date, category: category, notes: notes)
+            cost.car = car
+            modelContext.insert(cost)
+        }
+        dismiss()
+    }
+}
+
+struct CategoryChip: View {
+    let category: CostCategory
+    let isSelected: Bool
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: category.systemImage)
+                .font(.caption2)
+            Text(category.rawValue)
+                .font(.caption)
+        }
+        .foregroundStyle(isSelected ? .white : .white.opacity(0.5))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .glassEffect(in: RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(isSelected ? Color.purple.opacity(0.7) : Color.clear, lineWidth: 1)
+        )
+    }
+}
